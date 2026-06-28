@@ -26,7 +26,7 @@ const title = `${script.name} · NWAFU Scripts`;
 
 <BaseLayout title={title} description={script.description} currentPath={`/scripts/${Astro.params.slug}/`}>
   {redirectTo && <meta http-equiv="refresh" content={`0; url=${withBasePath(redirectTo)}`} />}
-  <section class="hero">
+  <section class="hero script-hero">
     <p><a href={withBasePath('/')}>{t.back}</a></p>
     <p class="eyebrow">{script.category}</p>
     <h1>{script.name}</h1>
@@ -38,7 +38,18 @@ const title = `${script.name} · NWAFU Scripts`;
   </section>
 
   <section class="section page-grid">
-    <article class="prose" set:html={html}></article>
+    <article class="prose">
+      <div set:html={html}></div>
+      <section class="generated-notes">
+        <h2>{t.metadata}</h2>
+        <pre><code>{`@name ${script.name}
+@version ${script.version}
+@updateURL ${script.installUrl}
+@downloadURL ${script.installUrl}`}</code></pre>
+        <h2>{t.matches}</h2>
+        <pre><code>{[...script.matches, ...script.includes].join('\n')}</code></pre>
+      </section>
+    </article>
     <aside class="install-panel">
       <h2>安装</h2>
       <p>点击后由 Tampermonkey 接管安装流程。</p>
@@ -55,13 +66,6 @@ const title = `${script.name} · NWAFU Scripts`;
       <div class="tag-list">{script.tags.map((tag) => <span>{tag}</span>)}</div>
       <h3>目录</h3>
       <nav class="toc">{headings.map((heading) => <a href={`#${heading.id}`}>{heading.text}</a>)}</nav>
-      <h3>{t.metadata}</h3>
-      <pre><code>{`@name ${script.name}
-@version ${script.version}
-@updateURL ${script.installUrl}
-@downloadURL ${script.installUrl}`}</code></pre>
-      <h3>{t.matches}</h3>
-      <pre><code>{[...script.matches, ...script.includes].join('\n')}</code></pre>
     </aside>
   </section>
 </BaseLayout>

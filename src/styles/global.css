@@ -171,6 +171,10 @@ a:hover {
   padding: 72px 0 48px;
 }
 
+.script-hero {
+  padding-bottom: 28px;
+}
+
 .page-hero {
   display: grid;
   grid-template-columns: minmax(0, 760px);
@@ -516,9 +520,10 @@ select {
 
 .page-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 310px;
-  gap: 28px;
+  grid-template-columns: minmax(0, 760px) 300px;
+  gap: clamp(28px, 5vw, 56px);
   align-items: start;
+  justify-content: center;
 }
 
 .install-panel,
@@ -533,17 +538,84 @@ select {
   background: var(--surface-soft);
 }
 
+.install-panel h2 {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 34px;
+  line-height: 1.1;
+}
+
+.install-panel h3 {
+  margin-top: 22px;
+  font-size: 17px;
+}
+
+.install-panel p {
+  margin: 0 0 14px;
+}
+
+.install-panel .button {
+  width: 100%;
+}
+
+.install-panel .meta-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+
 .toc a {
   display: block;
-  padding: 4px 0;
+  padding: 5px 0;
   color: var(--body);
   text-decoration: none;
 }
 
 .prose {
-  width: min(760px, calc(100% - 32px));
+  width: 100%;
   max-width: 760px;
-  margin-inline: auto;
+}
+
+.prose > :first-child,
+.prose > :first-child > :first-child {
+  margin-top: 0;
+}
+
+.prose h2 {
+  margin: 34px 0 12px;
+  font-size: clamp(30px, 3.2vw, 38px);
+}
+
+.prose h3 {
+  margin: 24px 0 10px;
+  font-size: 22px;
+}
+
+.prose p,
+.prose li {
+  color: var(--body);
+  font-size: 17px;
+  line-height: 1.8;
+}
+
+.prose p {
+  margin: 0 0 16px;
+}
+
+.prose ul,
+.prose ol {
+  margin: 0 0 20px;
+  padding-left: 1.35em;
+}
+
+.prose li + li {
+  margin-top: 4px;
+}
+
+.generated-notes {
+  margin-top: 42px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
 }
 
 .prose img {
