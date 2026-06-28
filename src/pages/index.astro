@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ScriptCard from '../components/ScriptCard.astro';
 import { activeScripts, scripts } from '../lib/scripts';
-import { siteConfig, withBasePath } from '../lib/site';
+import { absoluteUrl, siteConfig, withBasePath } from '../lib/site';
 
 const active = activeScripts();
 const latest = [...active].sort((a, b) => b.verified.localeCompare(a.verified))[0];
@@ -12,9 +12,23 @@ const recommended = [...active]
 const archivedCount = scripts.length - active.length;
 const categories = [...new Set(active.map((script) => script.category))].sort();
 const tags = [...new Set(active.flatMap((script) => script.tags))].sort();
+const seoTitle = 'NWAFU Scripts · 西北农林科技大学网站增强脚本集';
+const seoDescription = 'NWAFU Scripts 收录面向西北农林科技大学相关网站的 Userscript，提供脚本说明、安装入口和固定更新地址。';
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'NWAFU Scripts',
+  alternateName: '西北农林科技大学网站增强脚本集',
+  url: absoluteUrl('/'),
+  description: seoDescription,
+  author: {
+    '@type': 'Person',
+    name: siteConfig.author,
+  },
+};
 ---
 
-<BaseLayout title="NWAFU Scripts" currentPath="/">
+<BaseLayout title={seoTitle} description={seoDescription} currentPath="/" schema={schema}>
   <section class="hero hero-split">
     <div class="hero-copy">
       <p class="eyebrow">NWAFU Scripts</p>

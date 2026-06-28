@@ -7,13 +7,13 @@ status: stable
 verified: 2026-06-28
 featured: false
 title_en: "Course Selection Helper"
-summary_en: "Helps track target classes, retry enrollment requests, and handle course-selection page details."
+summary_en: "Tracks target teaching-class IDs on the NWAFU course-selection site, retries enrollment requests, and notifies results."
 legacy_slugs: []
 ---
 
 # 西农抢课助手 Pro
 
-用于西北农林科技大学本科生选课系统。脚本围绕目标教学班列表工作，提供轮询、重试、提醒和登录页验证码辅助（测试有问题，目前自动登录功能暂不可用）。
+用于西北农林科技大学本科生选课系统。维护目标教学班列表，按设定间隔轮询并重试提交，处理结果通过声音或桌面通知提醒。
 
 ## 功能
 

@@ -7,13 +7,13 @@ status: stable
 verified: 2026-06-28
 featured: false
 title_en: "ZIP Download for Homework Platform"
-summary_en: "Adds one-click ZIP packing to directory pages on the older homework platform."
+summary_en: "Adds scan and ZIP-pack actions to 202.117.179.110 directory pages for downloading whole resource folders."
 legacy_slugs: []
 ---
 
 # 110作业平台目录打包下载
 
-给陈旧的110作业平台的目录页加一个打包入口。遇到一整个目录的资料时，可以直接压成 ZIP 下载。目前有密码加密的目录因为本人没有相关测试用例，故没有做密码加密的目录支持。
+用于 202.117.179.110 作业平台目录页。为资源目录增加扫描和 ZIP 打包入口，适合一次性下载整组资料。
 
 ## 功能
 

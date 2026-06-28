@@ -8,9 +8,16 @@ const {
   description = '西北农林科技大学网站增强脚本集',
   lang = 'zh',
   currentPath = Astro.url.pathname,
+  image = '',
+  ogType = 'website',
+  robots = 'index,follow,max-image-preview:large,max-snippet:160',
+  schema,
 } = Astro.props;
 const canonicalPath = currentPath.replace(siteConfig.basePath, '') || '/';
 const canonical = absoluteUrl(canonicalPath);
+const siteName = 'NWAFU Scripts';
+const locale = lang === 'zh' ? 'zh_CN' : 'en_US';
+const socialImage = image ? absoluteUrl(image) : '';
 const shouldInjectUmami =
   import.meta.env.PROD && siteConfig.umamiScriptUrl && siteConfig.umamiWebsiteId;
 const shouldInjectAdsense = import.meta.env.PROD && siteConfig.adsenseClient;
@@ -23,10 +30,24 @@ const shouldInjectAdsense = import.meta.env.PROD && siteConfig.adsenseClient;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <meta name="author" content={siteConfig.author} />
+    <meta name="robots" content={robots} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href={withBasePath('/favicon.svg')} type="image/svg+xml" />
     <link rel="alternate" type="application/rss+xml" title="NWAFU Scripts RSS" href={withBasePath('/feed.xml')} />
     <link rel="alternate" type="application/atom+xml" title="NWAFU Scripts Atom" href={withBasePath('/atom.xml')} />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:locale" content={locale} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {socialImage && <meta property="og:image" content={socialImage} />}
+    <meta name="twitter:card" content={socialImage ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {socialImage && <meta name="twitter:image" content={socialImage} />}
+    {schema && <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />}
     {shouldInjectAdsense && (
       <script
         is:inline

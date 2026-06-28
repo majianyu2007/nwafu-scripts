@@ -7,13 +7,13 @@ status: stable
 verified: 2026-06-28
 featured: true
 title_en: "Upload Helper for Student Service"
-summary_en: "Adds drag-and-drop, paste upload, renaming, and file-size handling to EMAP attachment widgets."
+summary_en: "Adds drag-and-drop, clipboard image paste, renaming, and PDF/PNG compression to student-service uploads."
 legacy_slugs: []
 ---
 
 # NWAFU 学生服务上传增强：拖放与粘贴
 
-给学生服务“数据采集”里的附件上传框补上拖放和粘贴。处理材料时不用反复点文件选择框。
+用于学生服务数据采集附件上传。为 EMAP 上传组件增加拖放、剪贴板图片粘贴、文件重命名和部分 PDF/PNG 压缩处理。
 
 ## 功能
 

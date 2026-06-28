@@ -3,7 +3,7 @@ import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import { scripts } from '../../../../lib/scripts';
 import { labels, displayDate } from '../../../../lib/i18n';
 import { renderMarkdown, extractHeadings, removeLeadingH1 } from '../../../../lib/markdown';
-import { withBasePath } from '../../../../lib/site';
+import { siteConfig, withBasePath } from '../../../../lib/site';
 
 export function getStaticPaths() {
   const canonical = scripts.map((script) => ({ params: { slug: script.slug }, props: { script, redirectTo: '' } }));
@@ -21,10 +21,30 @@ const t = labels.en;
 const readmeBody = removeLeadingH1(script.readme);
 const html = renderMarkdown(readmeBody);
 const headings = extractHeadings(readmeBody);
-const title = `${script.title_en || script.name} · NWAFU Scripts`;
+const pageTitle = script.title_en || script.name;
+const title = `${pageTitle} · Install and notes · NWAFU Scripts`;
+const description = script.summary_en || script.description;
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: pageTitle,
+  alternateName: script.name,
+  applicationCategory: 'BrowserApplication',
+  operatingSystem: 'Web browser',
+  softwareVersion: script.version,
+  description,
+  url: script.pageUrl.replace('/scripts/', '/en/scripts/'),
+  downloadUrl: script.installUrl,
+  codeRepository: siteConfig.repositoryUrl,
+  license: `${siteConfig.repositoryUrl}/blob/main/LICENSE`,
+  author: {
+    '@type': 'Person',
+    name: siteConfig.author,
+  },
+};
 ---
 
-<BaseLayout title={title} description={script.summary_en || script.description} lang="en" currentPath={`/en/scripts/${Astro.params.slug}/`}>
+<BaseLayout title={title} description={description} lang="en" ogType="article" currentPath={`/en/scripts/${Astro.params.slug}/`} schema={schema}>
   {redirectTo && <meta http-equiv="refresh" content={`0; url=${withBasePath(redirectTo)}`} />}
   <section class="hero script-hero">
     <p><a href={withBasePath('/en/')}>{t.back}</a></p>

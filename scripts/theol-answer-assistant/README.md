@@ -7,13 +7,13 @@ status: stable
 verified: 2026-06-28
 featured: false
 title_en: "THEOL Answer Assistant"
-summary_en: "Adds a THEOL answer panel with question-bank lookup and optional OpenAI-compatible LLM support."
+summary_en: "Adds an in-page THEOL answer panel that can query enncy or an OpenAI-compatible service and fill or copy answers."
 legacy_slugs: []
 ---
 
 # THEOL 在线教育综合平台自动答题助手
 
-用于 THEOL 页面。脚本在页面上增加答题面板，可配置题库 token 和 OpenAI 兼容 LLM 服务。
+用于 THEOL 在线教育综合平台。页面内提供答题面板，可连接 enncy 题库或 OpenAI 兼容接口，辅助查询、填入和复制答案。
 
 ## 功能
 

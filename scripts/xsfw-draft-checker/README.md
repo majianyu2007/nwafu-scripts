@@ -7,13 +7,13 @@ status: stable
 verified: 2026-06-28
 featured: true
 title_en: "Draft Checker for Student Data Collection"
-summary_en: "Finds draft records in student data collection and links back to each item."
+summary_en: "Scans student data-collection records for draft items and links back to each unfinished record."
 legacy_slugs: []
 ---
 
 # NWAFU 数据采集草稿检查器
 
-用来检查学生服务数据采集里还有哪些记录停在“草稿”状态，适合提交前快速扫一遍。
+用于学生服务数据采集页面。扫描当前账号可见记录，集中列出仍处于草稿状态的条目，并提供回到原记录的入口。
 
 ## 功能
 

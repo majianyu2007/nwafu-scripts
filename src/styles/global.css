@@ -392,11 +392,19 @@ p {
 }
 
 .script-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
   padding: 18px;
 }
 
-.script-card p {
-  min-height: 3.2em;
+.script-card > p {
+  display: -webkit-box;
+  min-height: 4.8em;
+  margin-bottom: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .card-topline {
@@ -436,6 +444,26 @@ p {
   flex-wrap: wrap;
   gap: 6px;
   margin: 14px 0;
+}
+
+.script-card .tag-list {
+  min-height: 54px;
+  align-content: flex-start;
+}
+
+.script-card .meta-grid {
+  margin-top: auto;
+  margin-bottom: 0;
+  padding-top: 16px;
+}
+
+.script-card .card-actions {
+  align-items: stretch;
+  margin-top: 14px;
+}
+
+.script-card .card-actions .button {
+  flex: 1 1 0;
 }
 
 .meta-grid {

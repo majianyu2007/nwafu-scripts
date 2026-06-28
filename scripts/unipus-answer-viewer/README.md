@@ -7,13 +7,13 @@ status: stable
 verified: 2026-06-28
 featured: false
 title_en: "Unipus Answer Viewer"
-summary_en: "Shows parsed answers on Unipus exercise pages and can fill common question types."
+summary_en: "Shows answers in a side panel on Unipus exercise pages, with fill support for selected question types."
 legacy_slugs: []
 ---
 
 # U校园答案显示器
 
-用于 U校园练习页面。脚本会在页面侧边提供答案读取、显示和填充相关操作。
+用于 U 校园练习页面。侧边面板读取并展示答案，支持部分题型填充和题目切换后的刷新。
 
 ## 功能
 
