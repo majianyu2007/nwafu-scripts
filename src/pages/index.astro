@@ -1,0 +1,113 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ScriptCard from '../components/ScriptCard.astro';
+import { activeScripts, scripts } from '../lib/scripts';
+import { siteConfig, withBasePath } from '../lib/site';
+
+const active = activeScripts();
+const latest = [...active].sort((a, b) => b.verified.localeCompare(a.verified))[0];
+const recommended = [...active]
+  .sort((a, b) => Number(b.featured) - Number(a.featured) || b.verified.localeCompare(a.verified) || a.name.localeCompare(b.name, 'zh-CN'))
+  .slice(0, 4);
+const archivedCount = scripts.length - active.length;
+const categories = [...new Set(active.map((script) => script.category))].sort();
+const tags = [...new Set(active.flatMap((script) => script.tags))].sort();
+---
+
+<BaseLayout title="NWAFU Scripts" currentPath="/">
+  <section class="hero hero-split">
+    <div class="hero-copy">
+      <p class="eyebrow">NWAFU Scripts</p>
+      <h1>西北农林科技大学网站增强脚本集</h1>
+      <p>面向西北农林科技大学相关网站的 Userscript 索引，提供脚本说明、安装入口和固定更新地址。</p>
+      <div class="card-actions">
+        <a class="button primary" href={withBasePath('/guide/install/')}>安装 Tampermonkey 指南</a>
+        <a class="button secondary" href={siteConfig.repositoryUrl}>GitHub 仓库</a>
+        <a class="button secondary" href={`${siteConfig.repositoryUrl}/issues`}>Issues 反馈</a>
+      </div>
+    </div>
+    <div class="hero-panel" aria-label="项目概览">
+      <div class="hero-panel-header">
+        <span>已收录脚本</span>
+        <strong>{scripts.length}</strong>
+      </div>
+      <dl class="summary-list">
+        <div><dt>可安装</dt><dd>{active.length}</dd></div>
+        <div><dt>分类</dt><dd>{[...new Set(scripts.map((script) => script.category))].length}</dd></div>
+        <div><dt>最近验证</dt><dd>{latest?.verified.slice(5) || '-'}</dd></div>
+      </dl>
+      {recommended.length > 0 && (
+        <div class="recommendations" data-recommendations>
+          <div class="recommendation-head">
+            <span class="eyebrow">推荐脚本</span>
+          </div>
+          {recommended.map((script, index) => (
+            <article class="recommendation-card" data-recommendation hidden={index !== 0}>
+              <div class="card-topline">
+                <span class="status status-stable">{script.category}</span>
+                <span>{script.version}</span>
+              </div>
+              <h3>{script.name}</h3>
+              <p>{script.summary || script.description}</p>
+              <div class="tag-list">{script.tags.slice(0, 3).map((tag) => <span>{tag}</span>)}</div>
+              <div class="card-actions">
+                <a class="button primary" href={withBasePath(script.installPath)}>安装</a>
+                <a class="button secondary" href={withBasePath(`/scripts/${script.slug}/`)}>说明</a>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-header">
+      <h2>全部脚本</h2>
+      {archivedCount > 0 && <a href={withBasePath('/archive/')}>查看归档</a>}
+    </div>
+    <form class="filters" data-filter-form>
+      <div class="filter-row">
+        <label>关键词
+          <input name="q" type="search" placeholder="搜索名称、简介、分类、标签" />
+        </label>
+        <label>分类
+          <select name="category">
+            <option value="">全部分类</option>
+            {categories.map((category) => <option value={category}>{category}</option>)}
+          </select>
+        </label>
+        <label>标签
+          <select name="tag">
+            <option value="">全部标签</option>
+            {tags.map((tag) => <option value={tag}>{tag}</option>)}
+          </select>
+        </label>
+        <label>状态
+          <select name="status">
+            <option value="">可用状态</option>
+            <option value="stable">stable</option>
+            <option value="beta">beta</option>
+          </select>
+        </label>
+        <label>排序
+          <select name="sort">
+            <option value="verified">最近验证</option>
+            <option value="name">名称</option>
+            <option value="version">版本</option>
+            <option value="category">分类</option>
+          </select>
+        </label>
+      </div>
+    </form>
+    {active.length > 0 ? (
+      <div class="grid">
+        {active.map((script) => <ScriptCard script={script} />)}
+      </div>
+    ) : (
+      <div class="empty">暂无可展示的稳定脚本。新增真实脚本后，首页会自动显示。</div>
+    )}
+    <div class="empty" data-filter-empty hidden>没有符合当前筛选条件的脚本。</div>
+  </section>
+
+</BaseLayout>

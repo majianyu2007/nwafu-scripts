@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import changelog from '../generated/changelog.json';
+
+type ChangelogEntry = (typeof changelog)[number];
+---
+
+<BaseLayout title="更新日志 · NWAFU Scripts" currentPath="/changelog/">
+  <section class="hero page-hero">
+    <p class="eyebrow">Changelog</p>
+    <h1>更新日志</h1>
+    <p>近期站点和脚本变更记录。提交链接可查看对应差异。</p>
+  </section>
+  <section class="section">
+    <ul class="changelog-list">
+      {changelog.map((entry: ChangelogEntry) => (
+        <li>
+          <strong>{entry.title}</strong>
+          <p>{entry.date} · <a href={entry.url}>{entry.sha}</a> {entry.scripts.length > 0 && `· ${entry.scripts.join(', ')}`}</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+</BaseLayout>

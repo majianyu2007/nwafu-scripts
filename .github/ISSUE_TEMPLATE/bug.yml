@@ -1,0 +1,48 @@
+name: Bug report
+description: 报告脚本问题
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: input
+    id: script
+    attributes:
+      label: 脚本名称
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: 访问页面 URL
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: 浏览器和版本
+  - type: input
+    id: manager
+    attributes:
+      label: 脚本管理器和版本
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期行为
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+  - type: textarea
+    id: console
+    attributes:
+      label: 控制台报错
+      render: text
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图

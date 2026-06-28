@@ -1,0 +1,61 @@
+---
+import Header from '../components/Header.astro';
+import { absoluteUrl, siteConfig, withBasePath } from '../lib/site';
+import '../styles/global.css';
+
+const {
+  title = 'NWAFU Scripts',
+  description = '西北农林科技大学网站增强脚本集',
+  lang = 'zh',
+  currentPath = Astro.url.pathname,
+} = Astro.props;
+const canonicalPath = currentPath.replace(siteConfig.basePath, '') || '/';
+const canonical = absoluteUrl(canonicalPath);
+const shouldInjectUmami =
+  import.meta.env.PROD && siteConfig.umamiScriptUrl && siteConfig.umamiWebsiteId;
+const shouldInjectAdsense = import.meta.env.PROD && siteConfig.adsenseClient;
+---
+
+<!doctype html>
+<html lang={lang} data-theme="auto">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={withBasePath('/favicon.svg')} type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title="NWAFU Scripts RSS" href={withBasePath('/feed.xml')} />
+    <link rel="alternate" type="application/atom+xml" title="NWAFU Scripts Atom" href={withBasePath('/atom.xml')} />
+    {shouldInjectAdsense && (
+      <script
+        is:inline
+        async
+        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${siteConfig.adsenseClient}`}
+        crossorigin="anonymous"
+      ></script>
+    )}
+    {shouldInjectUmami && (
+      <script is:inline defer src={siteConfig.umamiScriptUrl} data-website-id={siteConfig.umamiWebsiteId}></script>
+    )}
+    <script is:inline>
+      (() => {
+        const theme = localStorage.getItem('nwafu-theme');
+        if (theme) document.documentElement.dataset.theme = theme;
+        const lang = localStorage.getItem('nwafu-lang');
+        if (lang) document.documentElement.dataset.langPreference = lang;
+      })();
+    </script>
+  </head>
+  <body>
+    <Header lang={lang} currentPath={canonicalPath} />
+    <main>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <p>NWAFU Scripts · MIT · {siteConfig.author}</p>
+      <p><a href={siteConfig.repositoryUrl}>GitHub</a></p>
+    </footer>
+    <script is:inline type="module" src={withBasePath('/assets/site.js')}></script>
+  </body>
+</html>

@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ScriptCard from '../components/ScriptCard.astro';
+import { archivedScripts } from '../lib/scripts';
+
+const archived = archivedScripts();
+---
+
+<BaseLayout title="归档 · NWAFU Scripts" currentPath="/archive/">
+  <section class="hero page-hero">
+    <p class="eyebrow">Archive</p>
+    <h1>归档脚本</h1>
+    <p>暂停维护或已失效的脚本保留在此页，便于查看说明和历史安装地址。</p>
+  </section>
+  <section class="section">
+    {archived.length > 0 ? <div class="grid">{archived.map((script) => <ScriptCard script={script} />)}</div> : <div class="empty">当前没有归档脚本。</div>}
+  </section>
+</BaseLayout>

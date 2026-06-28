@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { siteConfig } from '../lib/site';
+---
+
+<BaseLayout title="关于 · NWAFU Scripts" currentPath="/about/">
+  <section class="hero page-hero">
+    <p class="eyebrow">About</p>
+    <h1>关于 NWAFU Scripts</h1>
+    <p>一个面向西北农林科技大学相关网站的 Userscript 索引。</p>
+  </section>
+  <section class="section prose">
+    <p>NWAFU Scripts 收录和发布一些用于校园网站的浏览器脚本。它的作用是把脚本说明、安装地址和更新地址集中起来，方便查找、安装和后续维护。</p>
+    <p>项目由个人维护，并非学校官方服务。脚本能做什么、在哪些页面运行，都以每个脚本详情页列出的说明和匹配规则为准。</p>
+    <p>校园网站的页面结构、接口和登录状态可能变化。遇到脚本失效或页面异常，可以通过 <a href={`${siteConfig.repositoryUrl}/issues`}>GitHub Issues</a> 提交页面地址、浏览器版本、脚本管理器版本和必要的截图或控制台报错。</p>
+    <p>本站可能加载 Google AdSense 广告脚本和 Umami 访问统计。Umami 用于了解页面访问情况；这些统计不参与脚本运行，也不会改变脚本功能。</p>
+  </section>
+</BaseLayout>

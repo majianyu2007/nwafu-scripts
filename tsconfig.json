@@ -1,0 +1,11 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "allowJs": false,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "strict": true,
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["src", "tools", "tests", "astro.config.mjs", "site.config.ts"]
+}

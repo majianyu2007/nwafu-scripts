@@ -1,0 +1,42 @@
+---
+import type { ScriptItem } from '../lib/scripts';
+import { labels, displayDate, type Lang } from '../lib/i18n';
+import { withBasePath } from '../lib/site';
+
+const { script, lang = 'zh' } = Astro.props as { script: ScriptItem; lang?: Lang };
+const t = labels[lang];
+const title = lang === 'en' && script.title_en ? script.title_en : script.name;
+const summary = lang === 'en' && script.summary_en ? script.summary_en : script.summary || script.description;
+const pagePath = lang === 'en' ? `/en/scripts/${script.slug}/` : `/scripts/${script.slug}/`;
+---
+
+<article
+  class="script-card"
+  data-script-card
+  data-name={title}
+  data-search={`${script.slug} ${script.name} ${script.title_en} ${script.description} ${script.summary} ${script.summary_en} ${script.matches.join(' ')} ${script.includes.join(' ')} ${script.matchSummary.join(' ')} ${script.grants.join(' ')} ${script.requires.join(' ')} ${script.connects.join(' ')}`}
+  data-summary={`${script.summary || script.description} ${script.summary_en}`}
+  data-category={script.category}
+  data-tags={script.tags.join(',')}
+  data-status={script.status}
+  data-verified={script.verified}
+  data-version={script.version}
+>
+  <div class="card-topline">
+    <span class={`status status-${script.status}`}>{script.status}</span>
+    <span>{script.category}</span>
+  </div>
+  <h3><a href={withBasePath(pagePath)}>{title}</a></h3>
+  <p>{summary}</p>
+  <div class="tag-list" aria-label={t.tags}>
+    {script.tags.map((tag) => <span>{tag}</span>)}
+  </div>
+  <dl class="meta-grid">
+    <div><dt>{t.version}</dt><dd>{script.version}</dd></div>
+    <div><dt>{t.verified}</dt><dd>{displayDate(script.verified, lang)}</dd></div>
+  </dl>
+  <div class="card-actions">
+    <a class="button primary" href={withBasePath(script.installPath)}>{t.install}</a>
+    <a class="button secondary" href={withBasePath(pagePath)}>{t.details}</a>
+  </div>
+</article>

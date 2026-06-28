@@ -1,0 +1,40 @@
+{
+  "name": "nwafu-scripts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.17.1",
+  "engines": {
+    "node": ">=22 <25"
+  },
+  "scripts": {
+    "dev": "pnpm generate && tsx tools/build-changelog.ts && BASE_PATH=/ astro dev",
+    "generate": "tsx tools/generate-scripts.ts",
+    "validate": "tsx tools/generate-scripts.ts --validate-only",
+    "test": "vitest run",
+    "check": "tsx tools/build-changelog.ts && astro check && tsc --noEmit",
+    "build": "pnpm generate && pnpm validate && tsx tools/build-changelog.ts && astro build && tsx tools/build-feeds.ts && tsx tools/finalize-dist.ts",
+    "preview": "astro preview",
+    "ci": "pnpm generate && pnpm validate && pnpm version:check && pnpm test && pnpm check && pnpm build",
+    "version:check": "tsx tools/validate-version-bumps.ts"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.3",
+    "astro": "^7.0.3",
+    "fast-glob": "^3.3.3",
+    "fuse.js": "^7.4.2",
+    "gray-matter": "^4.0.3",
+    "marked": "^17.0.1",
+    "semver": "^7.8.5",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@types/node": "^24.0.0",
+    "@types/semver": "^7.7.0",
+    "prettier": "^3.9.1",
+    "tsx": "^4.20.5",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  }
+}

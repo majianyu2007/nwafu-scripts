@@ -1,0 +1,82 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ScriptCard from '../../components/ScriptCard.astro';
+import { activeScripts, scripts } from '../../lib/scripts';
+import { siteConfig, withBasePath } from '../../lib/site';
+
+const active = activeScripts();
+const latest = [...active].sort((a, b) => b.verified.localeCompare(a.verified))[0];
+const recommended = [...active]
+  .sort((a, b) => Number(b.featured) - Number(a.featured) || b.verified.localeCompare(a.verified) || a.name.localeCompare(b.name))
+  .slice(0, 4);
+const archivedCount = scripts.length - active.length;
+const categories = [...new Set(active.map((script) => script.category))].sort();
+const tags = [...new Set(active.flatMap((script) => script.tags))].sort();
+---
+
+<BaseLayout title="NWAFU Scripts" lang="en" currentPath="/en/">
+  <section class="hero hero-split">
+    <div class="hero-copy">
+      <p class="eyebrow">NWAFU Scripts</p>
+      <h1>Campus userscript index for NWAFU websites</h1>
+      <p>A userscript index for NWAFU-related websites, with script notes, install links, and stable update URLs.</p>
+      <div class="card-actions">
+        <a class="button primary" href={withBasePath('/en/guide/install/')}>Install guide</a>
+        <a class="button secondary" href={siteConfig.repositoryUrl}>GitHub</a>
+        <a class="button secondary" href={`${siteConfig.repositoryUrl}/issues`}>Issues</a>
+      </div>
+    </div>
+    <div class="hero-panel" aria-label="Project overview">
+      <div class="hero-panel-header">
+        <span>Scripts listed</span>
+        <strong>{scripts.length}</strong>
+      </div>
+      <dl class="summary-list">
+        <div><dt>Installable</dt><dd>{active.length}</dd></div>
+        <div><dt>Categories</dt><dd>{[...new Set(scripts.map((script) => script.category))].length}</dd></div>
+        <div><dt>Verified</dt><dd>{latest?.verified.slice(5) || '-'}</dd></div>
+      </dl>
+      {recommended.length > 0 && (
+        <div class="recommendations" data-recommendations>
+          <div class="recommendation-head">
+            <span class="eyebrow">Recommended script</span>
+          </div>
+          {recommended.map((script, index) => (
+            <article class="recommendation-card" data-recommendation hidden={index !== 0}>
+              <div class="card-topline">
+                <span class="status status-stable">{script.category}</span>
+                <span>{script.version}</span>
+              </div>
+              <h3>{script.title_en || script.name}</h3>
+              <p>{script.summary_en || script.summary || script.description}</p>
+              <div class="tag-list">{script.tags.slice(0, 3).map((tag) => <span>{tag}</span>)}</div>
+              <div class="card-actions">
+                <a class="button primary" href={withBasePath(script.installPath)}>Install</a>
+                <a class="button secondary" href={withBasePath(`/en/scripts/${script.slug}/`)}>Notes</a>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-header">
+      <h2>Scripts</h2>
+      {archivedCount > 0 && <a href={withBasePath('/en/archive/')}>Archive</a>}
+    </div>
+    <form class="filters" data-filter-form>
+      <div class="filter-row">
+        <label>Search<input name="q" type="search" placeholder="Name, summary, category, tags" /></label>
+        <label>Category<select name="category"><option value="">All</option>{categories.map((category) => <option value={category}>{category}</option>)}</select></label>
+        <label>Tag<select name="tag"><option value="">All</option>{tags.map((tag) => <option value={tag}>{tag}</option>)}</select></label>
+        <label>Status<select name="status"><option value="">Active</option><option value="stable">stable</option><option value="beta">beta</option></select></label>
+        <label>Sort<select name="sort"><option value="verified">Recently verified</option><option value="name">Name</option><option value="version">Version</option><option value="category">Category</option></select></label>
+      </div>
+    </form>
+    {active.length > 0 ? <div class="grid">{active.map((script) => <ScriptCard script={script} lang="en" />)}</div> : <div class="empty">No active scripts are listed yet.</div>}
+    <div class="empty" data-filter-empty hidden>No scripts match the current filters.</div>
+  </section>
+
+</BaseLayout>

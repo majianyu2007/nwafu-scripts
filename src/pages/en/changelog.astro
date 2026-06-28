@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import changelog from '../../generated/changelog.json';
+
+type ChangelogEntry = (typeof changelog)[number];
+---
+
+<BaseLayout title="Changelog · NWAFU Scripts" lang="en" currentPath="/en/changelog/">
+  <section class="hero page-hero">
+    <p class="eyebrow">Changelog</p>
+    <h1>Changelog</h1>
+    <p>Recent site and script changes. Open a commit to see the full diff.</p>
+  </section>
+  <section class="section">
+    <ul class="changelog-list">
+      {changelog.map((entry: ChangelogEntry) => (
+        <li>
+          <strong>{entry.title}</strong>
+          <p>{entry.date} · <a href={entry.url}>{entry.sha}</a> {entry.scripts.length > 0 && `· ${entry.scripts.join(', ')}`}</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+</BaseLayout>

@@ -1,0 +1,33 @@
+---
+import { withBasePath } from '../lib/site';
+import { labels, localizedPath, type Lang } from '../lib/i18n';
+
+const { lang = 'zh', currentPath = '/' } = Astro.props as { lang?: Lang; currentPath?: string };
+const t = labels[lang];
+const otherLang = lang === 'zh' ? 'en' : 'zh';
+const switchPath = withBasePath(localizedPath(currentPath, otherLang));
+const nav = [
+  [t.home, lang === 'zh' ? '/' : '/en/'],
+  [t.installGuide, lang === 'zh' ? '/guide/install/' : '/en/guide/install/'],
+  [t.changelog, lang === 'zh' ? '/changelog/' : '/en/changelog/'],
+  [t.archive, lang === 'zh' ? '/archive/' : '/en/archive/'],
+  [t.about, lang === 'zh' ? '/about/' : '/en/about/'],
+];
+---
+
+<header class="site-header">
+  <a class="brand" href={withBasePath(lang === 'zh' ? '/' : '/en/')} data-lang-link={lang}>
+    <span class="brand-mark">NS</span>
+    <span>
+      <strong>NWAFU Scripts</strong>
+      <small>{lang === 'zh' ? '西北农林科技大学网站增强脚本集' : 'Campus userscript index'}</small>
+    </span>
+  </a>
+  <nav class="nav" aria-label="Primary">
+    {nav.map(([label, href]) => <a href={withBasePath(href)}>{label}</a>)}
+  </nav>
+  <div class="header-actions">
+    <a class="lang-switch" href={switchPath} data-lang-switch={otherLang}>{otherLang === 'zh' ? '中文' : 'EN'}</a>
+    <button class="icon-button" type="button" data-theme-toggle aria-label="Toggle theme">◐</button>
+  </div>
+</header>

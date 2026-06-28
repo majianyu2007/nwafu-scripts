@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Install guide · NWAFU Scripts" lang="en" currentPath="/en/guide/install/">
+  <section class="hero page-hero">
+    <p class="eyebrow">Guide</p>
+    <h1>Install and update scripts</h1>
+    <p>Install a userscript manager first, then install the script from this site.</p>
+  </section>
+  <section class="section prose">
+    <h2 id="install-manager">Step 1: Install a manager</h2>
+    <p>Install Tampermonkey or another Userscript-compatible manager. Keep only one manager enabled to avoid duplicate installs.</p>
+    <p>If your browser asks for developer mode on the extensions page, follow that browser prompt.</p>
+
+    <h2 id="install-script">Step 2: Install a script</h2>
+    <p>Choose a script on this site and click “Install script”. The manager should open a confirmation page with the script name, matched sites, and permissions.</p>
+    <p>Use the install button instead of saving the file manually. That keeps the update URL intact.</p>
+
+    <h2 id="use-script">Step 3: Open the target site</h2>
+    <p>Each script only runs on the sites listed in its notes. Open the matching site and refresh the page once. If the script has a panel or button, it should appear on the page.</p>
+
+    <h2 id="update">Updates</h2>
+    <p>Scripts installed from this site include a fixed update URL. Your manager can check it automatically or from its dashboard.</p>
+
+    <h2 id="manage">Disable or remove</h2>
+    <p>Open the manager dashboard from the browser toolbar. Use the switch to disable a script temporarily, or delete it if you no longer need it.</p>
+
+    <h2 id="troubleshoot">If nothing happens</h2>
+    <p>Check that the current page is in the listed match range, then make sure both the manager and the script are enabled. If it still fails, report the page URL, browser version, userscript manager version, and console errors in Issues.</p>
+  </section>
+</BaseLayout>

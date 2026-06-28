@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBasePath } from '../lib/site';
+---
+
+<BaseLayout title="404 · NWAFU Scripts" currentPath="/404/">
+  <section class="hero page-hero">
+    <p class="eyebrow">404</p>
+    <h1>页面不存在</h1>
+    <p>这个地址暂时没有内容。可以回到首页重新找脚本。</p>
+    <div class="card-actions">
+      <a class="button primary" href={withBasePath('/')}>返回首页</a>
+      <a class="button secondary" href={withBasePath('/guide/install/')}>安装指南</a>
+    </div>
+  </section>
+</BaseLayout>

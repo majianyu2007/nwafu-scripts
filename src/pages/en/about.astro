@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { siteConfig } from '../../lib/site';
+---
+
+<BaseLayout title="About · NWAFU Scripts" lang="en" currentPath="/en/about/">
+  <section class="hero page-hero">
+    <p class="eyebrow">About</p>
+    <h1>About NWAFU Scripts</h1>
+    <p>A userscript index for NWAFU-related websites.</p>
+  </section>
+  <section class="section prose">
+    <p>NWAFU Scripts collects and publishes browser userscripts for campus-related websites. It keeps script notes, install URLs, and update URLs in one place.</p>
+    <p>The project is personally maintained and is not an official university service. Each script detail page lists what the script does and which pages it matches.</p>
+    <p>If a script stops working, the target page, API, or browser permissions may have changed. Report the page URL, browser version, userscript manager version, and any useful screenshots or console errors through <a href={`${siteConfig.repositoryUrl}/issues`}>GitHub Issues</a>.</p>
+    <p>The site may load Google AdSense and Umami analytics. Umami is used to understand page visits; analytics do not affect how scripts run.</p>
+  </section>
+</BaseLayout>

@@ -1,0 +1,66 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 18 * * 0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nwafu-scripts-web
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.1
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and test
+        run: pnpm run ci
+
+      - name: Check deploy token
+        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' }}
+        run: |
+          if [ -z "${{ secrets.PAGES_DEPLOY_TOKEN }}" ]; then
+            echo "PAGES_DEPLOY_TOKEN is required to deploy the dist/ directory to the web branch." >&2
+            exit 1
+          fi
+
+      - name: Deploy to web branch
+        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch' }}
+        env:
+          TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          cd dist
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b web
+          git add -A
+          git commit -m "Deploy static site"
+          git remote add origin "https://x-access-token:${TOKEN}@github.com/${REPOSITORY}.git"
+          git push --force origin web

@@ -1,0 +1,29 @@
+name: Feature request
+description: 提出功能建议
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: input
+    id: title
+    attributes:
+      label: 建议标题
+    validations:
+      required: true
+  - type: input
+    id: site
+    attributes:
+      label: 涉及网站
+  - type: textarea
+    id: problem
+    attributes:
+      label: 希望解决的问题
+    validations:
+      required: true
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 可能的使用场景
+  - type: textarea
+    id: extra
+    attributes:
+      label: 补充信息

@@ -1,0 +1,66 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { scripts } from '../../../lib/scripts';
+import { labels, displayDate } from '../../../lib/i18n';
+import { renderMarkdown, extractHeadings } from '../../../lib/markdown';
+import { withBasePath } from '../../../lib/site';
+
+export function getStaticPaths() {
+  const canonical = scripts.map((script) => ({ params: { slug: script.slug }, props: { script, redirectTo: '' } }));
+  const legacy = scripts.flatMap((script) =>
+    script.legacy_slugs.map((legacySlug) => ({
+      params: { slug: legacySlug },
+      props: { script, redirectTo: `/scripts/${script.slug}/` },
+    })),
+  );
+  return [...canonical, ...legacy];
+}
+
+const { script, redirectTo } = Astro.props;
+const t = labels.zh;
+const html = renderMarkdown(script.readme);
+const headings = extractHeadings(script.readme);
+const title = `${script.name} · NWAFU Scripts`;
+---
+
+<BaseLayout title={title} description={script.description} currentPath={`/scripts/${Astro.params.slug}/`}>
+  {redirectTo && <meta http-equiv="refresh" content={`0; url=${withBasePath(redirectTo)}`} />}
+  <section class="hero">
+    <p><a href={withBasePath('/')}>{t.back}</a></p>
+    <p class="eyebrow">{script.category}</p>
+    <h1>{script.name}</h1>
+    {script.title_en && <p>{script.title_en}</p>}
+    <p>{script.description}</p>
+    {(script.status === 'paused' || script.status === 'deprecated') && (
+      <div class="notice">该脚本当前状态为 {script.status}，请先阅读说明并确认当前页面可用性。</div>
+    )}
+  </section>
+
+  <section class="section page-grid">
+    <article class="prose" set:html={html}></article>
+    <aside class="install-panel">
+      <h2>安装</h2>
+      <p>点击后由 Tampermonkey 接管安装流程。</p>
+      <p><a class="button primary" href={withBasePath(script.installPath)}>{t.install}</a></p>
+      <p><a class="button secondary" href={script.sourceUrl}>{t.source}</a></p>
+      <p><a class="button secondary" href={script.issueUrl}>{t.feedback}</a></p>
+      <dl class="meta-grid">
+        <div><dt>{t.status}</dt><dd><span class={`status status-${script.status}`}>{script.status}</span></dd></div>
+        <div><dt>{t.version}</dt><dd>{script.version}</dd></div>
+        <div><dt>{t.verified}</dt><dd>{displayDate(script.verified, 'zh')}</dd></div>
+        <div><dt>{t.category}</dt><dd>{script.category}</dd></div>
+      </dl>
+      <h3>{t.tags}</h3>
+      <div class="tag-list">{script.tags.map((tag) => <span>{tag}</span>)}</div>
+      <h3>目录</h3>
+      <nav class="toc">{headings.map((heading) => <a href={`#${heading.id}`}>{heading.text}</a>)}</nav>
+      <h3>{t.metadata}</h3>
+      <pre><code>{`@name ${script.name}
+@version ${script.version}
+@updateURL ${script.installUrl}
+@downloadURL ${script.installUrl}`}</code></pre>
+      <h3>{t.matches}</h3>
+      <pre><code>{[...script.matches, ...script.includes].join('\n')}</code></pre>
+    </aside>
+  </section>
+</BaseLayout>
