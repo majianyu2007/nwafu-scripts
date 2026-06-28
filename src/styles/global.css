@@ -400,7 +400,6 @@ p {
 
 .script-card > p {
   display: -webkit-box;
-  min-height: 4.8em;
   margin-bottom: 0;
   overflow: hidden;
   -webkit-box-orient: vertical;
@@ -444,11 +443,6 @@ p {
   flex-wrap: wrap;
   gap: 6px;
   margin: 14px 0;
-}
-
-.script-card .tag-list {
-  min-height: 54px;
-  align-content: flex-start;
 }
 
 .script-card .meta-grid {
