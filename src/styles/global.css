@@ -781,6 +781,41 @@ pre {
     font-size: 20px;
   }
 
+  .section {
+    padding: 28px 0;
+  }
+
+  .section-header {
+    margin-bottom: 12px;
+  }
+
+  .filters {
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+
+  .filter-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .filter-row > label {
+    min-width: 0;
+    font-size: 12px;
+  }
+
+  .filter-row > label:first-child {
+    grid-column: 1 / -1;
+  }
+
+  input,
+  select {
+    min-height: 42px;
+    padding: 7px 9px;
+    font-size: 15px;
+  }
+
   .install-panel {
     position: static;
   }
