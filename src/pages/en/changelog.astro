@@ -1,22 +1,33 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import changelog from '../../generated/changelog.json';
+import { scripts } from '../../lib/scripts';
 
 type ChangelogEntry = (typeof changelog)[number];
+
+const scriptNames = new Map(scripts.map((script) => [script.slug, script.title_en || script.name]));
 ---
 
 <BaseLayout title="Changelog · NWAFU Scripts" lang="en" currentPath="/en/changelog/">
-  <section class="hero page-hero">
+  <section class="hero page-hero compact-hero">
     <p class="eyebrow">Changelog</p>
     <h1>Changelog</h1>
-    <p>Recent site and script changes. Open a commit to see the full diff.</p>
+    <p>Public changes for the site and listed scripts.</p>
   </section>
   <section class="section">
     <ul class="changelog-list">
       {changelog.map((entry: ChangelogEntry) => (
         <li>
-          <strong>{entry.title}</strong>
-          <p>{entry.date} · <a href={entry.url}>{entry.sha}</a> {entry.scripts.length > 0 && `· ${entry.scripts.join(', ')}`}</p>
+          <div class="changelog-date">{entry.date}</div>
+          <div class="changelog-body">
+            <strong>{entry.title}</strong>
+            <p><a href={entry.url}>{entry.sha}</a></p>
+            {entry.scripts.length > 0 && (
+              <div class="tag-list changelog-tags" aria-label="Related scripts">
+                {entry.scripts.map((slug) => <span>{scriptNames.get(slug) || slug}</span>)}
+              </div>
+            )}
+          </div>
         </li>
       ))}
     </ul>
