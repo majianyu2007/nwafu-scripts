@@ -18,7 +18,10 @@ const tags = [...new Set(active.flatMap((script) => script.tags))].sort();
   <section class="hero hero-split">
     <div class="hero-copy">
       <p class="eyebrow">NWAFU Scripts</p>
-      <h1>西北农林科技大学网站增强脚本集</h1>
+      <h1 class="home-title">
+        <span>西北农林科技大学</span>
+        <span>网站增强脚本集</span>
+      </h1>
       <p>面向西北农林科技大学相关网站的 Userscript 索引，提供脚本说明、安装入口和固定更新地址。</p>
       <div class="card-actions">
         <a class="button primary" href={withBasePath('/guide/install/')}>安装 Tampermonkey 指南</a>

@@ -330,6 +330,15 @@ h1 {
   font-size: clamp(34px, 5.4vw, 56px);
 }
 
+.home-title {
+  max-width: 860px;
+  text-wrap: balance;
+}
+
+.home-title span {
+  display: block;
+}
+
 h2 {
   margin: 0 0 18px;
   font-size: clamp(28px, 4vw, 42px);
