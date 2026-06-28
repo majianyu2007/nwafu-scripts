@@ -7,5 +7,8 @@ export default defineConfig({
   site: siteConfig.siteUrl,
   base: siteConfig.basePath || '/',
   trailingSlash: 'always',
+  build: {
+    inlineStylesheets: 'always',
+  },
   integrations: [sitemap()],
 });

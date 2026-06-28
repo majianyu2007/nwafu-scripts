@@ -9,6 +9,10 @@ export function renderMarkdown(markdown: string): string {
   return marked.parse(markdown, { async: false }) as string;
 }
 
+export function removeLeadingH1(markdown: string): string {
+  return markdown.replace(/^\s*#\s+.+(?:\r?\n)+/, '').trimStart();
+}
+
 export function extractHeadings(markdown: string): { depth: number; text: string; id: string }[] {
   const headings: { depth: number; text: string; id: string }[] = [];
   for (const match of markdown.matchAll(/^(#{2,3})\s+(.+)$/gm)) {

@@ -2,7 +2,7 @@
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import { scripts } from '../../../../lib/scripts';
 import { labels, displayDate } from '../../../../lib/i18n';
-import { renderMarkdown, extractHeadings } from '../../../../lib/markdown';
+import { renderMarkdown, extractHeadings, removeLeadingH1 } from '../../../../lib/markdown';
 import { withBasePath } from '../../../../lib/site';
 
 export function getStaticPaths() {
@@ -18,8 +18,9 @@ export function getStaticPaths() {
 
 const { script, redirectTo } = Astro.props;
 const t = labels.en;
-const html = renderMarkdown(script.readme);
-const headings = extractHeadings(script.readme);
+const readmeBody = removeLeadingH1(script.readme);
+const html = renderMarkdown(readmeBody);
+const headings = extractHeadings(readmeBody);
 const title = `${script.title_en || script.name} · NWAFU Scripts`;
 ---
 
