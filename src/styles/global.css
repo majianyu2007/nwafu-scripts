@@ -637,13 +637,94 @@ pre {
 }
 
 @media (max-width: 820px) {
+  .site-header,
+  .site-footer,
+  .section,
+  .hero {
+    width: min(1120px, calc(100% - 24px));
+  }
+
   .site-header {
-    align-items: flex-start;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px 12px;
+    min-height: 0;
+    padding: 12px 0;
   }
 
   .brand {
+    min-width: 0;
     margin-right: 0;
+  }
+
+  .site-header > .brand {
+    width: auto;
+    grid-column: 1;
+  }
+
+  .site-header > .header-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+  }
+
+  .brand strong {
+    font-size: 18px;
+  }
+
+  .brand small {
+    max-width: min(250px, 62vw);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .nav {
+    grid-column: 1 / -1;
+    width: 100%;
+    flex-wrap: nowrap;
+    gap: 4px;
+    overflow-x: auto;
+    padding: 2px 0;
+    scrollbar-width: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav a {
+    flex: 0 0 auto;
+    min-height: 32px;
+    padding: 4px 7px;
+    font-size: 15px;
+  }
+
+  .header-actions {
+    justify-self: end;
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  .lang-switch,
+  .icon-button {
+    min-height: 34px;
+    padding: 4px 8px;
+  }
+
+  .icon-button {
+    width: 34px;
+    justify-content: center;
+  }
+
+  .hero {
+    padding: 34px 0 30px;
   }
 
   .page-grid {
@@ -652,6 +733,52 @@ pre {
 
   .hero-split {
     grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .home-title {
+    max-width: 100%;
+    font-size: clamp(34px, 10vw, 42px);
+    line-height: 1.08;
+  }
+
+  .hero p {
+    font-size: 17px;
+  }
+
+  .hero-copy > .card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+  }
+
+  .hero-copy > .card-actions .button {
+    width: 100%;
+    padding-inline: 12px;
+  }
+
+  .hero-copy > .card-actions .primary {
+    grid-column: 1 / -1;
+  }
+
+  .hero-panel {
+    padding: 16px;
+  }
+
+  .hero-panel-header strong {
+    font-size: 40px;
+  }
+
+  .summary-list {
+    gap: 6px;
+  }
+
+  .summary-list div {
+    padding: 8px;
+  }
+
+  .summary-list dd {
+    font-size: 20px;
   }
 
   .install-panel {
