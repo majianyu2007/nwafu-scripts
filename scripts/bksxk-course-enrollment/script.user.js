@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         西农抢课助手 Pro
-// @version      6.2.1
+// @version      6.2.2
 // @description  为西北农林科技大学本科生选课系统提供目标课程轮询、重试、提醒和验证码辅助。
 // @match        https://bksxk.nwafu.edu.cn/*
 // @grant        GM_notification
@@ -653,21 +653,26 @@
     let lastCaptchaObservedValue = '';
     let lastCaptchaObservedAt = 0;
 
+    function getCaptchaInputValue() {
+        return String(findCaptchaInput()?.value || '').trim();
+    }
+
     function resetCaptchaStability() {
-        lastCaptchaObservedValue = normalizeCaptchaText(findCaptchaInput()?.value || '');
+        lastCaptchaObservedValue = getCaptchaInputValue();
         lastCaptchaObservedAt = Date.now();
     }
 
     function getStableCaptchaValue(minStableMs = 700) {
-        const text = normalizeCaptchaText(findCaptchaInput()?.value || '');
+        const raw = getCaptchaInputValue();
+        const normalized = normalizeCaptchaText(raw);
         const now = Date.now();
-        if (text !== lastCaptchaObservedValue) {
-            lastCaptchaObservedValue = text;
+        if (raw !== lastCaptchaObservedValue) {
+            lastCaptchaObservedValue = raw;
             lastCaptchaObservedAt = now;
             return '';
         }
-        if (text.length !== CONFIG.CAPTCHA_LENGTH) return '';
-        return now - lastCaptchaObservedAt >= minStableMs ? text : '';
+        if (normalized.length !== CONFIG.CAPTCHA_LENGTH) return '';
+        return now - lastCaptchaObservedAt >= minStableMs ? raw : '';
     }
 
     function prepareLoginInputs() {
@@ -2241,8 +2246,10 @@
                     : '抢课助手：正在提交手动验证码...';
                 try {
                     for (const candidate of candidates) {
-                        fillCaptchaInput($('verifyCode'), candidate);
-                        await sleep(120);
+                        if (useAutoCandidates) {
+                            fillCaptchaInput($('verifyCode'), candidate);
+                            await sleep(120);
+                        }
                         console.log(`[抢课助手] 🔐 验证验证码候选: ${candidate}`);
                         const result = await submitLoginCandidate(candidate);
                         lastLoginResult = { at: Date.now(), code: result.code, msg: result.msg };
