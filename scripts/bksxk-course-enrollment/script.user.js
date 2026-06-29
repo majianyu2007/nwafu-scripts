@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         西农抢课助手 Pro
-// @version      6.2.2
+// @version      6.2.3
 // @description  为西北农林科技大学本科生选课系统提供目标课程轮询、重试、提醒和验证码辅助。
 // @match        https://bksxk.nwafu.edu.cn/*
 // @grant        GM_notification
@@ -790,13 +790,24 @@
                 at: Date.now(),
                 code: String(data.code || ''),
                 msg: data.msg || '',
+                token: data.data?.token || '',
+                number: data.data?.number || '',
             };
+            if (lastLoginResult.code === '1') {
+                if (lastLoginResult.token) {
+                    capturedToken = lastLoginResult.token;
+                    sessionStorage.setItem('token', lastLoginResult.token);
+                }
+                if (lastLoginResult.number && !CONFIG.STUDENT_CODE) capturedStudentCode = lastLoginResult.number;
+            }
             console.log(`[抢课助手] 登录接口返回 code:${lastLoginResult.code} msg:"${lastLoginResult.msg}"`);
         } catch (_) {
             lastLoginResult = {
                 at: Date.now(),
                 code: '',
                 msg: '登录接口响应解析失败',
+                token: '',
+                number: '',
             };
         }
     }
@@ -896,12 +907,22 @@
         };
     }
 
+    function hasMeaningfulBatchSnapshot(batch) {
+        const snapshot = normalizeBatchSnapshot(batch);
+        if (!snapshot) return false;
+        return Boolean(snapshot.name || snapshot.beginTime || snapshot.endTime || snapshot.schoolTerm || snapshot.typeCode || snapshot.typeName || snapshot.batchType);
+    }
+
     function readSavedBatch() {
         try {
             return normalizeBatchSnapshot(JSON.parse(GM_getValue('sniperLastBatch', 'null')));
         } catch (_) {
             return null;
         }
+    }
+
+    function hasSavedBatchForAutoRecovery() {
+        return hasMeaningfulBatchSnapshot(readSavedBatch());
     }
 
     function rememberBatch(batch) {
@@ -916,6 +937,8 @@
 
     function rememberBatchCode(code) {
         const saved = readSavedBatch() || {};
+        capturedBatchCode = String(code || '').trim();
+        if (!hasMeaningfulBatchSnapshot(saved)) return null;
         return rememberBatch({ ...saved, code });
     }
 
@@ -960,7 +983,7 @@
         const current = rememberBatch(batch);
         if (current?.code) return current.code;
         const saved = readSavedBatch();
-        if (saved?.code) {
+        if (saved?.code && hasMeaningfulBatchSnapshot(saved)) {
             capturedBatchCode = saved.code;
             return saved.code;
         }
@@ -1942,6 +1965,10 @@
     // ===================== 自动登录 =====================
     function isLoginPage() {
         if (!location.href.includes('index.do') || !$('studentLoginBtn') || !$('loginName') || !$('loginPwd')) return false;
+        // 已登录用户不要再弹验证码提示：
+        // 这个 SPA 登录页和首页共用 index.do，页面加载瞬间登录表单可能还未被隐藏，
+        // 如果此时已有 token + studentInfo，说明用户已登录，不要触发自动登录。
+        if (getToken() && sessionStorage.getItem('studentInfo')) return false;
         if (getToken() && !isVisibleElement($('loginDiv'))) return false;
         return isVisibleElement($('studentLoginBtn')) && isVisibleElement($('loginName'));
     }
@@ -1952,39 +1979,36 @@
         return Boolean(account && password && getStableCaptchaValue());
     }
 
-    async function submitLoginCandidate(candidate) {
-        const account = $('loginName')?.value?.trim();
-        const password = $('loginPwd')?.value;
-        const vtoken = sessionStorage.getItem('vtoken') || '';
-        if (!account || !password || !candidate || !vtoken) {
-            return { ok: false, code: '', msg: '账号、密码或验证码缺失' };
+    async function submitNativeLoginAndWait(timeout = 10000) {
+        const btn = $('studentLoginBtn');
+        if (!btn) return { ok: false, code: '', msg: '未找到登录按钮' };
+        if (typeof btn.click !== 'function') return { ok: false, code: '', msg: '登录按钮不可用' };
+
+        const start = Date.now();
+        const previousLoginAt = lastLoginResult?.at || 0;
+        btn.click();
+
+        while (Date.now() - start < timeout) {
+            // 注意：不能用 !isLoginPage() 判断登录成功，因为这个 SPA 系统在点击登录按钮后
+            // 会立即隐藏登录表单（显示 loading / 过渡到轮次页），此时服务端还没返回。
+            // 过早调用 continueAfterLogin 会导致 session 未建立就被踢回登录页。
+            // 只有 token 到位或登录接口返回了响应，才能确认登录结果。
+            if (getToken()) {
+                return { ok: true, code: '1', msg: '登录成功', number: $('loginName')?.value?.trim() || '' };
+            }
+            if (lastLoginResult && lastLoginResult.at > previousLoginAt) {
+                const code = String(lastLoginResult.code || '');
+                return {
+                    ok: code === '1',
+                    code,
+                    msg: lastLoginResult.msg || (code === '1' ? '登录成功' : '登录失败'),
+                    number: lastLoginResult.number || $('loginName')?.value?.trim() || '',
+                };
+            }
+            await sleep(150);
         }
-        const base64Api = window.$?.base64 || window.jQuery?.base64;
-        if (typeof getDesKeys !== 'function' || typeof strEnc !== 'function' || !base64Api?.encode) {
-            return { ok: false, code: '', msg: '页面加密函数未就绪' };
-        }
-        const keys = getDesKeys();
-        const loginPwd = base64Api.encode(strEnc(password, keys[0], keys[1], keys[2]));
-        const params = new URLSearchParams({
-            loginName: account,
-            loginPwd,
-            verifyCode: candidate,
-            vtoken,
-        });
-        const base = window.BaseUrl || '/xsxkapp';
-        const response = await fetch(`${base}/sys/xsxkapp/student/check/login.do?timestrap=${Date.now()}&${params.toString()}`, {
-            credentials: 'include',
-        });
-        const data = await response.json().catch(() => ({}));
-        const code = String(data.code || '');
-        if (code === '1' && data.data?.token) {
-            sessionStorage.removeItem('token');
-            sessionStorage.setItem('token', data.data.token);
-            capturedToken = data.data.token;
-            if (data.data.number && !CONFIG.STUDENT_CODE) capturedStudentCode = data.data.number;
-            return { ok: true, code, msg: '登录成功', number: data.data.number || '' };
-        }
-        return { ok: false, code, msg: data.msg || '登录失败' };
+
+        return { ok: false, code: '', msg: '登录响应超时' };
     }
 
     function parseBatchFromRadio(input) {
@@ -2008,25 +2032,42 @@
             .filter(item => item.batch?.code && !item.input.disabled && (isVisibleElement(item.input) || isVisibleElement(item.input.closest('tr'))));
     }
 
+    function isBatchExplicitlySelectable(item) {
+        if (!item?.batch) return false;
+        const batch = item.batch;
+        if (String(batch.canSelectCurrent || '') === '1') return true;
+        if (String(batch.canSelect || '') === '1' && !batch.noSelectReason) return true;
+        const rowText = String(item.rowText || '');
+        if (/未开始|已结束|不可选|不能选|暂停|关闭|不在|不允许/.test(rowText)) return false;
+        return /当前|正在|可选|选课中|进行中|开放/.test(rowText);
+    }
+
     function selectSavedOrDefaultBatch() {
         const items = getBatchRadioItems();
-        if (!items.length) return null;
+        if (!items.length) return { ok: false, reason: '没有可识别的选课轮次' };
 
         const saved = readSavedBatch();
         const current = normalizeBatchSnapshot(readCurrentBatch());
-        const preferredCode = saved?.code || current?.code || capturedBatchCode || '';
-        let item = preferredCode ? items.find(next => next.batch.code === preferredCode) : null;
-        if (!item) item = items.find(next => next.input.checked);
-        if (!item) item = items.find(next => String(next.batch.canSelectCurrent || '') === '1');
-        if (!item) item = items.find(next => String(next.batch.canSelect || '') === '1' && !next.batch.noSelectReason);
-        if (!item) item = items[0];
+        const savedCode = saved?.code && hasMeaningfulBatchSnapshot(saved) ? saved.code : '';
+        const preferredCode = savedCode || current?.code || capturedBatchCode || '';
+        const preferred = preferredCode ? items.find(next => next.batch.code === preferredCode) : null;
+        let item = preferred && isBatchExplicitlySelectable(preferred) ? preferred : null;
+        if (!item && preferred) {
+            return { ok: false, reason: `上次选课轮次当前不可选：${preferred.batch.name || preferred.rowText || preferred.batch.code}` };
+        }
+        if (!item) item = items.find(next => next.input.checked && isBatchExplicitlySelectable(next));
+        if (!item) item = items.find(isBatchExplicitlySelectable);
+
+        if (!item) {
+            return { ok: false, reason: '未找到明确可选的选课轮次，请手动选择' };
+        }
 
         if (!item.input.checked) item.input.click();
         item.input.checked = true;
         item.input.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
         item.input.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
         rememberBatch(item.batch);
-        return item.batch;
+        return { ok: true, batch: item.batch };
     }
 
     function findVisibleButtonByText(text) {
@@ -2041,15 +2082,19 @@
         if (!items.length) return false;
 
         const selected = selectSavedOrDefaultBatch();
-        if (tip && selected?.name) tip.innerHTML = `抢课助手：已选择上次轮次「${escHtml(selected.name)}」，正在确认...`;
+        if (!selected.ok) {
+            if (tip) tip.innerHTML = `抢课助手：${escHtml(selected.reason)}，请手动选择轮次后点击开始选课`;
+            return 'manual';
+        }
+        if (tip && selected.batch?.name) tip.innerHTML = `抢课助手：已选择轮次「${escHtml(selected.batch.name)}」，正在确认...`;
         await sleep(120);
 
         const confirmBtn = findVisibleButtonByText('确定');
-        if (!confirmBtn) return true;
+        if (!confirmBtn) return 'handled';
         confirmBtn.click();
         await sleep(800);
         rememberCurrentBatch();
-        return true;
+        return 'handled';
     }
 
     async function enterCoursePageFromHome(tip, timeout = 10000) {
@@ -2057,7 +2102,8 @@
         while (Date.now() - start < timeout) {
             rememberCurrentBatch();
             if (location.href.includes('curriculavariable.do') || location.href.includes('grablessons.do')) return true;
-            await handleBatchDialogIfPresent(tip);
+            const batchDialogState = await handleBatchDialogIfPresent(tip);
+            if (batchDialogState === 'manual') return false;
             const btn = $('courseBtn') || findVisibleButtonByText('开始选课');
             if (btn && isVisibleElement(btn)) {
                 if (tip) tip.innerHTML = '抢课助手：正在进入选课界面...';
@@ -2074,26 +2120,46 @@
     }
 
     async function continueAfterLogin(number, shouldEnterCourse = false, tip = null) {
-        const studentNumber = number || capturedStudentCode || CONFIG.LOGIN_NAME || $('loginName')?.value?.trim();
-        if (window.CVStudentLogin?.studentInfo && studentNumber) {
-            window.CVStudentLogin.studentInfo(studentNumber);
-        } else {
-            setTimeout(() => location.reload(), 300);
-            return;
-        }
+        // 不要立即调用 CVStudentLogin.studentInfo()！
+        // 因为 submitNativeLoginAndWait 通过点击页面按钮触发登录，
+        // 页面自己的 CVStudentLogin.login() 流程已经会加载 studentInfo 并切换视图。
+        // 我们再去调一次 studentInfo() 会干扰页面状态，导致被踢回登录页。
+        // 只需等待页面自己完成登录后流程即可。
 
         const start = Date.now();
+        let studentInfoCalled = false;
+        const studentNumber = number || capturedStudentCode || CONFIG.LOGIN_NAME || $('loginName')?.value?.trim();
+
         while (Date.now() - start < 12000) {
-            await handleBatchDialogIfPresent(tip);
+            const batchDialogState = await handleBatchDialogIfPresent(tip);
+            if (batchDialogState === 'manual') return;
             const hasStudentInfo = Boolean(sessionStorage.getItem('studentInfo'));
             const hasCourseButton = $('courseBtn') && isVisibleElement($('courseBtn'));
             if (hasStudentInfo || hasCourseButton) break;
+
+            // 兜底：如果等了 3 秒页面还没反应，说明页面自己的流程可能没触发，
+            // 此时才主动调用 studentInfo
+            if (!studentInfoCalled && Date.now() - start > 3000) {
+                if (window.CVStudentLogin?.studentInfo && studentNumber) {
+                    window.CVStudentLogin.studentInfo(studentNumber);
+                    studentInfoCalled = true;
+                }
+            }
+
             await sleep(300);
         }
         rememberCurrentBatch();
-        if (shouldEnterCourse) {
-            const entered = await enterCoursePageFromHome(tip);
-            if (!entered && tip) tip.innerHTML = '抢课助手：已登录，未找到开始选课按钮，请手动进入选课界面';
+
+        // 到达首页后，总是尝试点击"开始选课"进入选课界面。
+        // 不依赖 shouldEnterCourse（仅恢复模式才为 true），因为用户通过自动登录
+        // 到达首页后显然也想继续进入选课系统。
+        const entered = await enterCoursePageFromHome(tip);
+        if (!entered && tip) {
+            if (!hasSavedBatchForAutoRecovery()) {
+                tip.innerHTML = '抢课助手：已登录。没有上次轮次记录，请手动选择轮次并进入选课界面';
+            } else {
+                tip.innerHTML = '抢课助手：已登录，未找到开始选课按钮，请手动进入选课界面';
+            }
         }
     }
 
@@ -2250,9 +2316,8 @@
                             fillCaptchaInput($('verifyCode'), candidate);
                             await sleep(120);
                         }
-                        console.log(`[抢课助手] 🔐 验证验证码候选: ${candidate}`);
-                        const result = await submitLoginCandidate(candidate);
-                        lastLoginResult = { at: Date.now(), code: result.code, msg: result.msg };
+                        console.log(`[抢课助手] 🔐 通过页面登录按钮验证验证码: ${candidate}`);
+                        const result = await submitNativeLoginAndWait();
                         if (result.ok) {
                             loginFinished = true;
                             clearInterval(timer);
@@ -2286,9 +2351,10 @@
                     waitManualCaptcha = true;
                     remindManualCaptchaNeeded(tip, `验证码已尝试 ${CONFIG.CAPTCHA_TRY_LIMIT} 次失败`);
                 } else {
+                    const msg = lastLoginResult?.msg || '';
                     tip.innerHTML = useAutoCandidates
-                        ? `抢课助手：验证码候选均不正确，准备换一张 (${autoCaptchaAttempt + 1}/${CONFIG.CAPTCHA_TRY_LIMIT})...`
-                        : `抢课助手：验证码不正确，请重新输入 ${CONFIG.CAPTCHA_LENGTH} 位验证码`;
+                        ? `抢课助手：${escHtml(msg || '验证码候选均未通过')}，准备换一张 (${autoCaptchaAttempt + 1}/${CONFIG.CAPTCHA_TRY_LIMIT})...`
+                        : `抢课助手：${escHtml(msg || '登录未成功')}，请重新输入 ${CONFIG.CAPTCHA_LENGTH} 位验证码`;
                 }
                 return;
             }
@@ -2352,6 +2418,10 @@
         // 自动恢复
         if (hasRecentRunningState()) {
             if (location.href.includes('index.do') && !location.href.includes('curriculavariable.do') && !location.href.includes('grablessons.do')) {
+                if (!hasSavedBatchForAutoRecovery()) {
+                    log('⚠️ 没有上次轮次记录，请手动选择轮次并进入选课界面', 'warning');
+                    return;
+                }
                 log('🔄 检测到运行中掉线，准备进入选课界面...', 'info');
                 setTimeout(async () => {
                     const entered = await enterCoursePageFromHome(null);
