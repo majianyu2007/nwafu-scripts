@@ -3,7 +3,7 @@ category: 教务系统
 tags:
   - 选课
   - 验证码
-status: stable
+status: paused
 verified: 2026-06-29
 featured: false
 title_en: "Course Selection Helper"
@@ -14,6 +14,8 @@ legacy_slugs: []
 # 西农抢课助手 Pro
 
 用于西北农林科技大学本科生选课系统。维护目标教学班列表，按设定间隔轮询并重试提交，处理结果通过声音或桌面通知提醒。
+
+> 当前归档说明：该脚本近期测试存在较大问题，暂不建议继续安装或依赖自动抢课功能。目录和安装地址保留，便于已安装用户查看历史说明；如后续完成修复，可重新验证后恢复维护状态。
 
 ## 功能
 
