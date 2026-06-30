@@ -1,0 +1,243 @@
+[
+  {
+    "slug": "homework-platform-zip-download",
+    "name": "110作业平台目录打包下载",
+    "title_en": "ZIP Download for Homework Platform",
+    "description": "为 202.117.179.110 作业平台目录页增加递归扫描和 ZIP 打包下载。",
+    "summary": "用于 202.117.179.110 作业平台目录页。为资源目录增加扫描和 ZIP 打包入口，适合一次性下载整组资料。",
+    "summary_en": "Adds scan and ZIP-pack actions to 202.117.179.110 directory pages for downloading whole resource folders.",
+    "category": "作业平台",
+    "tags": [
+      "下载",
+      "ZIP"
+    ],
+    "status": "stable",
+    "version": "1.0.0",
+    "matches": [
+      "http://202.117.179.110/*"
+    ],
+    "matchSummary": [
+      "202.117.179.110"
+    ],
+    "grants": [
+      "none"
+    ],
+    "requires": [
+      "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
+    ],
+    "connects": []
+  },
+  {
+    "slug": "bksxk-course-enrollment",
+    "name": "西农抢课助手 Pro",
+    "title_en": "Course Selection Helper",
+    "description": "为西北农林科技大学本科生选课系统提供目标课程轮询、重试、提醒和验证码辅助。",
+    "summary": "用于西北农林科技大学本科生选课系统。维护目标教学班列表，按设定间隔轮询并重试提交，处理结果通过声音或桌面通知提醒。",
+    "summary_en": "Tracks target teaching-class IDs on the NWAFU course-selection site, retries enrollment requests, and notifies results.",
+    "category": "教务系统",
+    "tags": [
+      "选课",
+      "验证码"
+    ],
+    "status": "paused",
+    "version": "6.2.3",
+    "matches": [
+      "https://bksxk.nwafu.edu.cn/*"
+    ],
+    "matchSummary": [
+      "bksxk.nwafu.edu.cn"
+    ],
+    "grants": [
+      "GM_notification",
+      "GM_setValue",
+      "GM_getValue",
+      "GM_xmlhttpRequest"
+    ],
+    "requires": [],
+    "connects": [
+      "*"
+    ]
+  },
+  {
+    "slug": "xiaoe-material-downloader",
+    "name": "小鹅通资料下载助手",
+    "title_en": "Xiaoetong Material Downloader",
+    "description": "在小鹅通知识店铺课程页识别已加载的 PDF 资料预览，并提供原始 PDF 下载入口。",
+    "summary": "用于小鹅通知识店铺课程页。识别当前页面已经加载的 PDF 资料预览，并提供原始 PDF 下载入口。",
+    "summary_en": "Detects loaded PDF material previews on Xiaoetong course pages and adds direct PDF download links.",
+    "category": "学习平台",
+    "tags": [
+      "小鹅通",
+      "下载"
+    ],
+    "status": "beta",
+    "version": "0.1.0",
+    "matches": [
+      "https://*.h5.xiaoeknow.com/*",
+      "https://resource-tx-cdn.xiaoeeye.com/*"
+    ],
+    "matchSummary": [
+      ".h5.xiaoeknow.com",
+      "resource-tx-cdn.xiaoeeye.com"
+    ],
+    "grants": [
+      "none"
+    ],
+    "requires": [],
+    "connects": []
+  },
+  {
+    "slug": "xsfw-draft-checker",
+    "name": "NWAFU 数据采集草稿检查器",
+    "title_en": "Draft Checker for Student Data Collection",
+    "description": "扫描学生服务数据采集记录，集中列出草稿项并提供跳转入口。",
+    "summary": "用于学生服务数据采集页面。扫描当前账号可见记录，集中列出仍处于草稿状态的条目，并提供回到原记录的入口。",
+    "summary_en": "Scans student data-collection records for draft items and links back to each unfinished record.",
+    "category": "学生服务",
+    "tags": [
+      "数据采集",
+      "草稿"
+    ],
+    "status": "stable",
+    "version": "0.1.0",
+    "matches": [
+      "https://xsfw.nwafu.edu.cn/xsfw/sys/sjcjyqapp/*default/index.do*"
+    ],
+    "matchSummary": [
+      "xsfw.nwafu.edu.cn"
+    ],
+    "grants": [
+      "none"
+    ],
+    "requires": [],
+    "connects": []
+  },
+  {
+    "slug": "jwwspj-evaluation-helper",
+    "name": "NWAFU 网上评教辅助",
+    "title_en": "NWAFU Teaching Evaluation Helper",
+    "description": "为网上评教页面增加一键填写、未提交项定位和手动提交辅助面板。",
+    "summary": "用于网上评教应用。增加浮动控制面板，辅助填写当前问卷、定位未提交项目，并把提交动作留给用户手动触发。",
+    "summary_en": "Adds a control panel for filling evaluation forms, locating pending items, and submitting only after manual review.",
+    "category": "教务系统",
+    "tags": [
+      "教务系统",
+      "评教"
+    ],
+    "status": "beta",
+    "version": "1.0.0",
+    "matches": [
+      "https://newehall.nwafu.edu.cn/jwapp/sys/jwwspj/*default/index.do*"
+    ],
+    "matchSummary": [
+      "newehall.nwafu.edu.cn"
+    ],
+    "grants": [
+      "none"
+    ],
+    "requires": [],
+    "connects": []
+  },
+  {
+    "slug": "xsfw-upload-enhancer",
+    "name": "NWAFU 学生服务上传增强：拖放与粘贴",
+    "title_en": "Upload Helper for Student Service",
+    "description": "为学生服务数据采集附件上传增加拖放、粘贴、重命名和 PDF/PNG 压缩处理。",
+    "summary": "用于学生服务数据采集附件上传。为 EMAP 上传组件增加拖放、剪贴板图片粘贴、文件重命名和部分 PDF/PNG 压缩处理。",
+    "summary_en": "Adds drag-and-drop, clipboard image paste, renaming, and PDF/PNG compression to student-service uploads.",
+    "category": "学生服务",
+    "tags": [
+      "上传",
+      "粘贴"
+    ],
+    "status": "stable",
+    "version": "0.5.2",
+    "matches": [
+      "https://xsfw.nwafu.edu.cn/xsfw/sys/sjcjyqapp/*"
+    ],
+    "matchSummary": [
+      "xsfw.nwafu.edu.cn"
+    ],
+    "grants": [
+      "none"
+    ],
+    "requires": [
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+    ],
+    "connects": []
+  },
+  {
+    "slug": "theol-answer-assistant",
+    "name": "THEOL 自动答题助手",
+    "title_en": "THEOL Answer Assistant",
+    "description": "在 THEOL 页面增加题库查询、OpenAI 兼容 LLM 配置、答案填入和运行日志面板。",
+    "summary": "用于 THEOL 在线教育综合平台。页面内提供答题面板，可连接 enncy 题库或 OpenAI 兼容接口，辅助查询、填入和复制答案。",
+    "summary_en": "Adds an in-page THEOL answer panel that can query enncy or an OpenAI-compatible service and fill or copy answers.",
+    "category": "学习平台",
+    "tags": [
+      "THEOL",
+      "题库"
+    ],
+    "status": "stable",
+    "version": "1.0.0",
+    "matches": [
+      "https://eol.nwafu.edu.cn/*"
+    ],
+    "matchSummary": [
+      "eol.nwafu.edu.cn"
+    ],
+    "grants": [
+      "GM_xmlhttpRequest",
+      "GM_setValue",
+      "GM_getValue",
+      "GM_deleteValue",
+      "GM_addStyle",
+      "GM_registerMenuCommand"
+    ],
+    "requires": [],
+    "connects": [
+      "tk.enncy.cn",
+      "api.715654.xyz"
+    ]
+  },
+  {
+    "slug": "unipus-answer-viewer",
+    "name": "U校园答案显示器",
+    "title_en": "Unipus Answer Viewer",
+    "description": "在 U校园练习页面读取并显示答案，支持部分题型填充和题目切换刷新。",
+    "summary": "用于 U 校园练习页面。侧边面板读取并展示答案，支持部分题型填充和题目切换后的刷新。",
+    "summary_en": "Shows answers in a side panel on Unipus exercise pages, with fill support for selected question types.",
+    "category": "学习平台",
+    "tags": [
+      "U校园",
+      "答案"
+    ],
+    "status": "stable",
+    "version": "1.0.0",
+    "matches": [
+      "https://sso.unipus.cn/*",
+      "https://uai.unipus.cn/*",
+      "https://ucontent.unipus.cn/*"
+    ],
+    "matchSummary": [
+      "sso.unipus.cn",
+      "uai.unipus.cn",
+      "ucontent.unipus.cn"
+    ],
+    "grants": [
+      "GM_xmlhttpRequest",
+      "GM_addStyle",
+      "GM_getValue",
+      "GM_setValue"
+    ],
+    "requires": [
+      "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"
+    ],
+    "connects": [
+      "ucontent.unipus.cn",
+      "uai.unipus.cn",
+      "sso.unipus.cn"
+    ]
+  }
+]

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>NWAFU Scripts</title>
+    <link>https://mjy.js.org/nwafu-scripts/</link>
+    <description>西北农林科技大学网站增强脚本集</description>
+    <item>
+      <title>小鹅通资料下载助手</title>
+      <link>https://mjy.js.org/nwafu-scripts/scripts/xiaoe-material-downloader/</link>
+      <guid>https://mjy.js.org/nwafu-scripts/scripts/xiaoe-material-downloader/</guid>
+      <pubDate>Tue, 30 Jun 2026 00:00:00 GMT</pubDate>
+      <description>在小鹅通知识店铺课程页识别已加载的 PDF 资料预览，并提供原始 PDF 下载入口。</description>
+    </item>
+    <item>
+      <title>西农抢课助手 Pro</title>
+      <link>https://mjy.js.org/nwafu-scripts/scripts/bksxk-course-enrollment/</link>
+      <guid>https://mjy.js.org/nwafu-scripts/scripts/bksxk-course-enrollment/</guid>
+      <pubDate>Mon, 29 Jun 2026 00:00:00 GMT</pubDate>
+      <description>为西北农林科技大学本科生选课系统提供目标课程轮询、重试、提醒和验证码辅助。</description>
+    </item>
+    <item>
+      <title>NWAFU 网上评教辅助</title>
+      <link>https://mjy.js.org/nwafu-scripts/scripts/jwwspj-evaluation-helper/</link>
+      <guid>https://mjy.js.org/nwafu-scripts/scripts/jwwspj-evaluation-helper/</guid>
+      <pubDate>Mon, 29 Jun 2026 00:00:00 GMT</pubDate>
+      <description>为网上评教页面增加一键填写、未提交项定位和手动提交辅助面板。</description>
+    </item>
+    <item>
+      <title>110作业平台目录打包下载</title>
+      <link>https://mjy.js.org/nwafu-scripts/scripts/homework-platform-zip-download/</link>
+      <guid>https://mjy.js.org/nwafu-scripts/scripts/homework-platform-zip-download/</guid>
+      <pubDate>Sun, 28 Jun 2026 00:00:00 GMT</pubDate>
+      <description>为 202.117.179.110 作业平台目录页增加递归扫描和 ZIP 打包下载。</description>
+    </item>
+    <item>
+      <title>NWAFU 数据采集草稿检查器</title>
+      <link>https://mjy.js.org/nwafu-scripts/scripts/xsfw-draft-checker/</link>
+      <guid>https://mjy.js.org/nwafu-scripts/scripts/xsfw-draft-checker/</guid>
+      <pubDate>Sun, 28 Jun 2026 00:00:00 GMT</pubDate>
+      <description>扫描学生服务数据采集记录，集中列出草稿项并提供跳转入口。</description>
+    </item>
+    <item>
+      <title>NWAFU 学生服务上传增强：拖放与粘贴</title>
+      <link>https://mjy.js.org/nwafu-scripts/scripts/xsfw-upload-enhancer/</link>
+      <guid>https://mjy.js.org/nwafu-scripts/scripts/xsfw-upload-enhancer/</guid>
+      <pubDate>Sun, 28 Jun 2026 00:00:00 GMT</pubDate>
+      <description>为学生服务数据采集附件上传增加拖放、粘贴、重命名和 PDF/PNG 压缩处理。</description>
+    </item>
+    <item>
+      <title>THEOL 自动答题助手</title>
+      <link>https://mjy.js.org/nwafu-scripts/scripts/theol-answer-assistant/</link>
+      <guid>https://mjy.js.org/nwafu-scripts/scripts/theol-answer-assistant/</guid>
+      <pubDate>Sun, 28 Jun 2026 00:00:00 GMT</pubDate>
+      <description>在 THEOL 页面增加题库查询、OpenAI 兼容 LLM 配置、答案填入和运行日志面板。</description>
+    </item>
+    <item>
+      <title>U校园答案显示器</title>
+      <link>https://mjy.js.org/nwafu-scripts/scripts/unipus-answer-viewer/</link>
+      <guid>https://mjy.js.org/nwafu-scripts/scripts/unipus-answer-viewer/</guid>
+      <pubDate>Sun, 28 Jun 2026 00:00:00 GMT</pubDate>
+      <description>在 U校园练习页面读取并显示答案，支持部分题型填充和题目切换刷新。</description>
+    </item>
+  </channel>
+</rss>
