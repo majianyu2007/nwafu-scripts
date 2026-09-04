@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         西农综测班级互评填分助手
-// @version      1.0.0
+// @version      1.1.0
 // @description  在综合测评班级互评弹窗内按档位批量生成分数，档位按各项分值区间换算，可调浮动幅度和满分数量上限，保存由用户点击。
 // @match        https://xsfw.nwafu.edu.cn/xsfw/sys/zhcptybbapp/*default/index.do*
 // @grant        none
@@ -63,6 +63,19 @@
     } catch (error) {
       /* 存储不可用时忽略 */
     }
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => window.setTimeout(resolve, ms));
+  }
+
+  async function waitFor(check, timeout) {
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < timeout) {
+      if (check()) return true;
+      await sleep(150);
+    }
+    return check();
   }
 
   function round(value) {
@@ -212,7 +225,6 @@
         font: inherit;
         cursor: pointer;
       }
-      #${PANEL_ID} button.nzf-item:disabled { cursor: default; }
       #${PANEL_ID} .nzf-hint { margin-top: 10px; font-size: 12px; color: #64748b; }
       #${MODAL_ID} {
         position: fixed;
@@ -492,9 +504,25 @@
     });
   }
 
-  function gotoIndicator(index) {
+  // 页面同时打开两个互评弹窗会把已渲染的表格藏起来，所以切换前先关掉当前弹窗。
+  async function gotoIndicator(index) {
     const item = state.indicators[index];
     if (!item) return;
+    if (document.getElementById(TABLE_ID)) {
+      const cancel = document.querySelector('a[data-action="hpzbCancel"]');
+      if (!cancel) {
+        setMessage('当前弹窗没有取消按钮，请手动关闭后再切换。');
+        return;
+      }
+      setMessage('正在关闭当前弹窗。');
+      cancel.click();
+      // 有未保存内容时页面会自己弹确认框，等用户回答，脚本不代点。
+      const closed = await waitFor(() => !document.getElementById(TABLE_ID), 30000);
+      if (!closed) {
+        setMessage('当前弹窗仍然开着，未切换。');
+        return;
+      }
+    }
     setMessage(`正在打开“${item.name}”。`);
     item.el.click();
   }
@@ -653,18 +681,19 @@
 
   function renderIndicators() {
     if (!state.indicators.length) return '';
-    const locked = state.dialogOpen ? ' disabled' : '';
     const items = state.indicators
       .map((item, index) => {
         const badge = item.done
           ? '<span class="nzf-done">已完成</span>'
           : '<span class="nzf-todo">未完成</span>';
-        return `<button type="button" class="nzf-item" data-goto="${index}"${locked}>
+        return `<button type="button" class="nzf-item" data-goto="${index}">
           <span class="nzf-item-name">${escapeHtml(item.name)}</span>${badge}</button>`;
       })
       .join('');
     const pending = state.indicators.filter(item => !item.done).length;
-    const tip = state.dialogOpen ? '' : '<p class="nzf-hint">点击任意一项直接打开。</p>';
+    const tip = state.dialogOpen
+      ? '<p class="nzf-hint">切换到别的项会先关掉当前弹窗。</p>'
+      : '<p class="nzf-hint">点击任意一项直接打开。</p>';
     return `
       <div class="nzf-section">
         <span class="nzf-label">班级互评项（未完成 ${pending} / ${state.indicators.length}）</span>
