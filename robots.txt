@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mjy.js.org/nwafu-scripts/sitemap-index.xml
