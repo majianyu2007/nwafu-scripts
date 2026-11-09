@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         U校园答案显示器
-// @version      1.0.0
-// @description  在 U校园练习页面读取并显示答案，支持部分题型填充和题目切换刷新。
+// @version      1.2.0
+// @description  在 U校园练习页面读取并显示答案，支持选择、判断、填空、匹配、排序、听写、改错等题型填充和题目切换刷新。
 // @match        https://sso.unipus.cn/*
 // @match        https://uai.unipus.cn/*
 // @match        https://ucontent.unipus.cn/*
@@ -1069,7 +1069,14 @@
                 // 长文本多行: .question-inputbox-input (textarea)
                 // 填空单行: .input-user-answer input
                 // 下拉框: .fe-scoop
-                const allRawNodes = Array.from(document.querySelectorAll('.question-inputbox-input, .input-user-answer input, .fe-scoop'));
+                // 匹配题: .question-common-abs-textmatch .input-wrapper input
+                // 选词填空/词库填空: .scoop-wrapper .input-wrapper input
+                // 单句填空: .question-common-abs-fill-blank input
+                const allRawNodes = Array.from(new Set(document.querySelectorAll(
+                    '.question-inputbox-input, .input-user-answer input, .fe-scoop, '
+                    + '.question-common-abs-textmatch .input-wrapper input, .scoop-wrapper .input-wrapper input, '
+                    + '.question-common-abs-fill-blank input',
+                )));
                 const fillableNodes = allRawNodes.filter(n => {
                     // 如果当前节点是带 input 的类名或者是 input 标签本身，检查它是否在一个 .fe-scoop 容器内
                     // 如果在容器内，我们只处理 .fe-scoop 那个节点，避免重复计算
@@ -1088,8 +1095,30 @@
                 const sequenceViews = Array.from(document.querySelectorAll('.sequence-view, #sortableListWrapper'));
                 let sequenceFillCount = 0;
 
-                if (fillableNodes.length === 0 && multipleChoiceQuestions.length === 0 && sequenceViews.length === 0) {
-                    this.showStatus('⚠️ 页面上未找到支持的输入框、选择项或排序结构', 'warning');
+                // ================== 处理改错题 (Revise mistake) ==================
+                const reviseViews = Array.from(document.querySelectorAll('.question-revise-mistake'));
+                let reviseFillCount = 0;
+
+                // ================== 处理判断题 / 听说单选 (uls-sc) ==================
+                // 结构: .question-u-listen-speak-judgment-pc 或 ...-singlechoice-pc 下的 .uls-sc__question, 选项 .uls-sc__option
+                const ulsChoiceQuestions = Array.from(document.querySelectorAll(
+                    '.question-u-listen-speak-judgment-pc .uls-sc__question, '
+                    + '.question-u-listen-speak-singlechoice-pc .uls-sc__question',
+                ));
+                let ulsFillCount = 0;
+
+                // ================== 处理单词听写 (word-dictation) ==================
+                const dictationReplies = Array.from(document.querySelectorAll('.question-word-dictation .word-dictation-input'));
+                let dictationFillCount = 0;
+
+                // 改错题的答案里带 answersExtra.records, 其余题型的对齐要把它排除, 否则下标会错位。
+                const isReviseItem = item => Boolean(item.rawItem && typeof item.rawItem.answer === 'string'
+                    && item.rawItem.answer.includes('answersExtra'));
+
+                if (fillableNodes.length === 0 && multipleChoiceQuestions.length === 0
+                    && sequenceViews.length === 0 && reviseViews.length === 0 && ulsChoiceQuestions.length === 0
+                    && dictationReplies.length === 0) {
+                    this.showStatus('⚠️ 页面上未找到支持的输入框、选择项、排序、判断题、听写或改错结构', 'warning');
                     setTimeout(() => {
                         this.showStatus('加载完成', 'success');
                         this.showAnswers(answersData);
@@ -1097,16 +1126,16 @@
                     return;
                 }
 
+                // 选择题/判断题共用的选项字母答案, 按题目顺序打平。
+                const allChoiceAnswers = answersData.filter(item => !isReviseItem(item)).flatMap(item =>
+                    (item.answers || []).map(ansArr => {
+                        const ansStr = Array.isArray(ansArr) && ansArr.length > 0 ? ansArr.join('/') : String(ansArr || '');
+                        return ansStr.toUpperCase();
+                    })
+                );
+
                 if (multipleChoiceQuestions.length > 0) {
                     Logger.log(`找到 ${multipleChoiceQuestions.length} 道选择题`);
-
-                    // 将所有正确选项打平为一个顺序数组
-                    const allChoiceAnswers = answersData.flatMap(item =>
-                        (item.answers || []).map(ansArr => {
-                            const ansStr = Array.isArray(ansArr) && ansArr.length > 0 ? ansArr.join('/') : String(ansArr || '');
-                            return ansStr.toUpperCase();
-                        })
-                    );
 
                     Logger.log(`提取到 ${allChoiceAnswers.length} 个选择题答案:`, allChoiceAnswers);
 
@@ -1147,6 +1176,74 @@
                     }
                 }
 
+                // ================== 处理判断题与听说单选 ==================
+                // 这类题把选项渲染成 .uls-sc__option, 判断题的角标是 T/F, 但答案仍是 A/B, 按字母顺序取第几个选项即可。
+                if (ulsChoiceQuestions.length > 0) {
+                    Logger.log(`找到 ${ulsChoiceQuestions.length} 道判断题/听说单选题`);
+
+                    for (let idx = 0; idx < ulsChoiceQuestions.length; idx++) {
+                        const answer = allChoiceAnswers[idx];
+                        if (!answer) continue;
+                        const letters = answer.split('/').map(letter => letter.trim()).filter(Boolean);
+
+                        for (const opt of ulsChoiceQuestions[idx].querySelectorAll('.uls-sc__option')) {
+                            const position = Array.from(opt.parentElement.children).indexOf(opt);
+                            const shouldBeSelected = letters.includes(String.fromCharCode(65 + position));
+                            const isSelected = opt.classList.contains('uls-sc__option--selected');
+                            if (shouldBeSelected && !isSelected) {
+                                opt.click();
+                                await new Promise(r => setTimeout(r, 150));
+                            } else if (!shouldBeSelected && isSelected && letters.length === 1) {
+                                opt.click();
+                                await new Promise(r => setTimeout(r, 150));
+                            }
+                        }
+
+                        const chosen = Array.from(ulsChoiceQuestions[idx].querySelectorAll('.uls-sc__option--selected'));
+                        if (chosen.length > 0) ulsFillCount += 1;
+                    }
+                }
+
+                // ================== 处理单词听写 ==================
+                // 听写不是输入框, 是 .input-item 字母格子 + 键盘监听: 先点格子激活, 再逐字符派发 keydown。
+                if (dictationReplies.length > 0) {
+                    const flatTextAnswers = answersData.filter(item => !isReviseItem(item)).flatMap(item =>
+                        (item.answers || []).map(ansArr => (Array.isArray(ansArr) ? ansArr[0] : String(ansArr || '')))
+                    );
+
+                    for (let idx = 0; idx < dictationReplies.length; idx++) {
+                        const reply = dictationReplies[idx];
+                        const target = (flatTextAnswers[idx] || '').trim();
+                        const items = Array.from(reply.querySelectorAll('.input-item'));
+                        if (!target || items.length === 0) continue;
+                        if (items.map(item => item.textContent.trim()).join('') === target.trim()) {
+                            dictationFillCount += 1;
+                            continue;
+                        }
+
+                        items[0].click();
+                        await new Promise(r => setTimeout(r, 120));
+                        for (const char of target.trim().split('')) {
+                            const active = reply.querySelector('.input-item.active') || items[0];
+                            const event = { key: char, bubbles: true, cancelable: true };
+                            active.dispatchEvent(new KeyboardEvent('keydown', event));
+                            active.dispatchEvent(new KeyboardEvent('keypress', event));
+                            active.dispatchEvent(new KeyboardEvent('keyup', event));
+                            await new Promise(r => setTimeout(r, 70));
+                        }
+                        await new Promise(r => setTimeout(r, 150));
+
+                        const filled = reply.querySelectorAll('.input-item').length
+                            && Array.from(reply.querySelectorAll('.input-item')).map(item => item.textContent.trim()).join('');
+                        if (filled === target.trim()) {
+                            dictationFillCount += 1;
+                            reply.classList.add('unipus-flash');
+                        } else {
+                            Logger.warn(`听写第 ${idx + 1} 个词未能完整写入: ${filled} ≠ ${target}`);
+                        }
+                    }
+                }
+
                 // ================== 处理排序题逻辑 ==================
                 // 排序题需要模拟真实的拖拽操作来更新 React 内部状态，
                 // 纯 DOM 移动只会改变视觉，不会改变提交的数据。
@@ -1155,7 +1252,7 @@
                     Logger.log(`找到 ${sequenceViews.length} 个排序容器`);
 
                     // 提取所有排序类答案
-                    const allSequenceAnswers = answersData.flatMap(item =>
+                    const allSequenceAnswers = answersData.filter(item => !isReviseItem(item)).flatMap(item =>
                         (item.answers || []).map(ansArr => {
                             const ansStr = Array.isArray(ansArr) && ansArr.length > 0 ? ansArr[0] : String(ansArr || '');
                             const match = ansStr.match(/^[A-Z](?=[.\s]|$)/i);
@@ -1285,8 +1382,232 @@
                     }
                 }
 
+                // ================== 处理改错题逻辑 ==================
+                // 页面结构: .question-revise-mistake 内每个 .mistake-marker 是一句待改句子,
+                // 点词后弹出 .mistake-item-actions (add-before / change / delete / mark-correct),
+                // change 与 add-before 弹出 #edit-form_text 输入框和 .edit-form-submit 提交按钮。
+                // 答案结构: answer.children[i].answersExtra.records[] = { index, type, value: [原词, 新词] }, index 为句中第几个单词(从 0 开始)。
+
+                if (reviseViews.length > 0) {
+                    Logger.log(`找到 ${reviseViews.length} 个改错题容器`);
+                    const waitForNode = async (find, timeout) => {
+                        const startedAt = Date.now();
+                        while (Date.now() - startedAt < timeout) {
+                            const found = find();
+                            if (found) return found;
+                            await new Promise(r => setTimeout(r, 100));
+                        }
+                        return find();
+                    };
+
+                    // 只有真实按键序列能让 React 打开操作气泡, 单纯 el.click() 时开时不开。
+                    const syntheticClick = (target) => {
+                        const box = target.getBoundingClientRect();
+                        const base = {
+                            bubbles: true,
+                            cancelable: true,
+                            clientX: box.left + box.width / 2,
+                            clientY: box.top + box.height / 2,
+                            view: window,
+                            button: 0,
+                        };
+                        target.dispatchEvent(new PointerEvent('pointerdown', { ...base, buttons: 1, pointerId: 1, isPrimary: true }));
+                        target.dispatchEvent(new MouseEvent('mousedown', { ...base, buttons: 1 }));
+                        target.dispatchEvent(new PointerEvent('pointerup', { ...base, buttons: 0, pointerId: 1, isPrimary: true }));
+                        target.dispatchEvent(new MouseEvent('mouseup', { ...base, buttons: 0 }));
+                        target.dispatchEvent(new MouseEvent('click', base));
+                    };
+
+                    const readRecords = (item) => {
+                        try {
+                            const parsed = JSON.parse(item.rawItem && item.rawItem.answer || '{}');
+                            if (!Array.isArray(parsed.children)) return [];
+                            return parsed.children.map(child => {
+                                const records = child.answersExtra && child.answersExtra.records;
+                                return Array.isArray(records) ? records : [];
+                            });
+                        } catch (error) {
+                            Logger.warn('改错题答案解析失败', error);
+                            return [];
+                        }
+                    };
+
+                    const reviseItems = answersData.filter(isReviseItem);
+
+                    // 气泡里的操作文案与答案里的 type 同名; mark-correct 等状态判定用同一份映射。
+                    const ACTION_TEXT = {
+                        'change': 'change',
+                        'add-before': 'add-before',
+                        'delete': 'delete',
+                        'mark-correct': 'mark-correct',
+                    };
+
+                    // 已经改好的格子再点会进入“编辑已有修改”的气泡, 不再出现操作列表, 需要先判定是否需要动手。
+                    const alreadyApplied = (word, record) => {
+                        if (record.type === 'change') {
+                            const newWord = record.value && record.value[1];
+                            return word.classList.contains('change')
+                                && newWord !== undefined && newWord !== null
+                                && word.textContent.trim() === String(newWord).trim();
+                        }
+                        return word.classList.contains(ACTION_TEXT[record.type] || '');
+                    };
+
+                    const fillEditForm = async (newWord) => {
+                        const input = await waitForNode(() => document.querySelector('#edit-form_text'), 1500);
+                        if (!input) return false;
+                        if (newWord !== undefined && newWord !== null) {
+                            const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+                            setter.call(input, String(newWord));
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                            await new Promise(r => setTimeout(r, 120));
+                        }
+                        const submit = document.querySelector('button.edit-form-submit');
+                        if (!submit) return false;
+                        submit.click();
+                        return true;
+                    };
+
+                    const wordAt = (marker, index) => marker.querySelectorAll('.word.mistake-atom')[index];
+
+                    // 每次改完页面会重建该句的节点, 旧的引用会失效, 校验和重试都要重新取。
+                    const liveMarkerOf = (marker) => {
+                        if (marker.isConnected) return marker;
+                        const id = marker.dataset && marker.dataset.id;
+                        return (id && document.querySelector(`.mistake-marker[data-id="${id}"]`)) || null;
+                    };
+
+                    // 改过的单词再点会弹“确定撤销该操作吗”，要先撤销才能重新改。
+                    const revokeExisting = async (word) => {
+                        syntheticClick(word.querySelector('.mistake-atom-text') || word);
+                        const message = await waitForNode(
+                            () => document.querySelector('.ant-popover .ant-popover-message'),
+                            1200,
+                        );
+                        if (!message) return true;
+                        const buttons = Array.from(message.closest('.ant-popover').querySelectorAll('button'));
+                        const confirm = buttons[buttons.length - 1];
+                        if (!confirm) return false;
+                        confirm.click();
+                        await waitForNode(() => (document.querySelectorAll('.ant-popover').length === 0 ? true : null), 1500);
+                        await new Promise(r => setTimeout(r, 150));
+                        return true;
+                    };
+
+                    const applyRecord = async (marker, record) => {
+                        let word = wordAt(marker, record.index);
+                        if (!word) return false;
+                        if (alreadyApplied(word, record)) return true;
+
+                        const staleClass = ['change', 'delete', 'add-before', 'mark-correct']
+                            .some(name => word.classList.contains(name));
+                        if (staleClass && !(await revokeExisting(word))) return false;
+                        if (staleClass) {
+                            const live = liveMarkerOf(marker);
+                            word = live && wordAt(live, record.index);
+                            if (!word) return false;
+                        }
+
+                        word.scrollIntoView({ block: 'center' });
+                        await new Promise(r => setTimeout(r, 80));
+
+                        const actionText = ACTION_TEXT[record.type] || 'mark-correct';
+                        const needsForm = actionText === 'change' || actionText === 'add-before';
+                        const newWord = record.value && record.value[1];
+
+                        let action = null;
+                        for (let attempt = 0; attempt < 2 && !action; attempt += 1) {
+                            const live = liveMarkerOf(marker);
+                            const target = live && wordAt(live, record.index);
+                            if (!target) break;
+                            syntheticClick(target.querySelector('.mistake-atom-text') || target);
+                            action = await waitForNode(
+                                () => Array.from(document.querySelectorAll('.mistake-item-action'))
+                                    .find(el => el.textContent.trim() === actionText),
+                                1200,
+                            );
+                        }
+
+                        if (action) {
+                            action.click();
+                            if (needsForm && !(await fillEditForm(newWord))) return false;
+                        } else if (needsForm && document.querySelector('#edit-form_text')) {
+                            // 单词已被改过但内容不对, 气泡直接就是编辑表单。
+                            if (!(await fillEditForm(newWord))) return false;
+                        } else {
+                            Logger.warn(`改错题第 ${record.index} 个单词未能打开操作气泡`);
+                            return false;
+                        }
+
+                        // 等气泡关闭, 并确认页面确实记录了这次修改。
+                        await waitForNode(() => (document.querySelectorAll('.ant-popover').length === 0 ? true : null), 1500);
+                        await new Promise(r => setTimeout(r, 150));
+                        const live = liveMarkerOf(marker);
+                        const fresh = live && wordAt(live, record.index);
+                        return fresh ? alreadyApplied(fresh, record) : false;
+                    };
+
+                    for (let viewIndex = 0; viewIndex < reviseViews.length; viewIndex += 1) {
+                        const view = reviseViews[viewIndex];
+                        const item = reviseItems[viewIndex];
+                        if (!item) {
+                            Logger.warn('改错题缺少对应答案数据, 跳过');
+                            continue;
+                        }
+
+                        let markers = Array.from(view.querySelectorAll('.mistake-marker'));
+                        const recordsBySentence = readRecords(item);
+                        const viewRange = view.querySelector('.question-common-abs-reply') || view;
+
+                        // 每句只认一处修改, 先撤掉与答案无关或内容不对的既有修改, 否则同句其他单词点不开气泡。
+                        const staleWords = [];
+                        recordsBySentence.forEach((records, sentenceIndex) => {
+                            const marker = markers[sentenceIndex];
+                            if (!marker || records.length === 0) return;
+                            const recordByIndex = new Map(records.map(record => [record.index, record]));
+                            Array.from(marker.querySelectorAll('.word.mistake-atom')).forEach((word, wordIndex) => {
+                                const hasOp = ['change', 'delete', 'add-before', 'mark-correct']
+                                    .some(name => word.classList.contains(name));
+                                if (!hasOp) return;
+                                const record = recordByIndex.get(wordIndex);
+                                if (!record || !alreadyApplied(word, record)) {
+                                    staleWords.push({ marker, index: wordIndex });
+                                }
+                            });
+                        });
+                        for (const stale of staleWords) {
+                            const live = liveMarkerOf(stale.marker);
+                            const word = live && wordAt(live, stale.index);
+                            if (word) await revokeExisting(word);
+                        }
+                        markers = Array.from(view.querySelectorAll('.mistake-marker'));
+
+                        // 倒序处理: add-before 会在原位置插入单词, 从前往后改会打乱后面的下标。
+                        const tasks = [];
+                        recordsBySentence.forEach((records, sentenceIndex) => {
+                            const marker = markers[sentenceIndex];
+                            if (!marker) return;
+                            records.slice().sort((a, b) => b.index - a.index).forEach(record => {
+                                tasks.push({ marker, record });
+                            });
+                        });
+
+                        let applied = 0;
+                        for (const task of tasks) {
+                            if (await applyRecord(task.marker, task.record)) {
+                                applied += 1;
+                            }
+                        }
+                        Logger.log(`改错题: 待处理 ${tasks.length} 处, 成功 ${applied} 处`);
+                        if (applied > 0) {
+                            reviseFillCount += applied;
+                            viewRange.classList.add('unipus-flash');
+                        }
+                    }
+                }
+
                 // ================== 处理填空题目与下拉题目 ==================
-                const { flatForFill } = this.alignAnswers(answersData);
+                const { flatForFill } = this.alignAnswers(answersData.filter(item => !isReviseItem(item)));
 
                 Logger.log(`找到 ${fillableNodes.length} 个填空位置，准备填充 ${flatForFill.length} 个答案`);
 
@@ -1365,6 +1686,9 @@
                 if (fillCount > 0) successMsgPrefix.push(`${fillCount} 个填空`);
                 if (mcFillCount > 0) successMsgPrefix.push(`${mcFillCount} 个选项`);
                 if (sequenceFillCount > 0) successMsgPrefix.push(`${sequenceFillCount} 组排序`);
+                if (reviseFillCount > 0) successMsgPrefix.push(`${reviseFillCount} 处改错`);
+                if (ulsFillCount > 0) successMsgPrefix.push(`${ulsFillCount} 道判断`);
+                if (dictationFillCount > 0) successMsgPrefix.push(`${dictationFillCount} 个听写`);
 
                 const finalMsg = successMsgPrefix.length > 0
                     ? `✅ 成功填充 ${successMsgPrefix.join(' 和 ')}！`
