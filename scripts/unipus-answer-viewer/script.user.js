@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         U校园答案显示器
-// @version      1.2.0
+// @version      1.2.1
 // @description  在 U校园练习页面读取并显示答案，支持选择、判断、填空、匹配、排序、听写、改错等题型填充和题目切换刷新。
 // @match        https://sso.unipus.cn/*
 // @match        https://uai.unipus.cn/*
@@ -1401,6 +1401,16 @@
                     };
 
                     // 只有真实按键序列能让 React 打开操作气泡, 单纯 el.click() 时开时不开。
+                    // 沙箱里 window 是 Proxy, 直接当 view 会被 WebIDL 转换拒绝, 所以先带 view 构造, 失败就退回不带 view。
+                    const makeEvent = (Ctor, type, base, extra) => {
+                        const options = extra ? { ...base, ...extra } : base;
+                        try {
+                            return new Ctor(type, { ...options, view: window });
+                        } catch (error) {
+                            return new Ctor(type, options);
+                        }
+                    };
+
                     const syntheticClick = (target) => {
                         const box = target.getBoundingClientRect();
                         const base = {
@@ -1408,14 +1418,13 @@
                             cancelable: true,
                             clientX: box.left + box.width / 2,
                             clientY: box.top + box.height / 2,
-                            view: window,
                             button: 0,
                         };
-                        target.dispatchEvent(new PointerEvent('pointerdown', { ...base, buttons: 1, pointerId: 1, isPrimary: true }));
-                        target.dispatchEvent(new MouseEvent('mousedown', { ...base, buttons: 1 }));
-                        target.dispatchEvent(new PointerEvent('pointerup', { ...base, buttons: 0, pointerId: 1, isPrimary: true }));
-                        target.dispatchEvent(new MouseEvent('mouseup', { ...base, buttons: 0 }));
-                        target.dispatchEvent(new MouseEvent('click', base));
+                        target.dispatchEvent(makeEvent(PointerEvent, 'pointerdown', base, { buttons: 1, pointerId: 1, isPrimary: true }));
+                        target.dispatchEvent(makeEvent(MouseEvent, 'mousedown', base, { buttons: 1 }));
+                        target.dispatchEvent(makeEvent(PointerEvent, 'pointerup', base, { buttons: 0, pointerId: 1, isPrimary: true }));
+                        target.dispatchEvent(makeEvent(MouseEvent, 'mouseup', base, { buttons: 0 }));
+                        target.dispatchEvent(makeEvent(MouseEvent, 'click', base));
                     };
 
                     const readRecords = (item) => {
@@ -1516,7 +1525,7 @@
                         const newWord = record.value && record.value[1];
 
                         let action = null;
-                        for (let attempt = 0; attempt < 2 && !action; attempt += 1) {
+                        for (let attempt = 0; attempt < 3 && !action; attempt += 1) {
                             const live = liveMarkerOf(marker);
                             const target = live && wordAt(live, record.index);
                             if (!target) break;
