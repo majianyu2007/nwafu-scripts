@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         U校园答案显示器
-// @version      1.2.1
+// @version      1.2.3
 // @description  在 U校园练习页面读取并显示答案，支持选择、判断、填空、匹配、排序、听写、改错等题型填充和题目切换刷新。
 // @match        https://sso.unipus.cn/*
 // @match        https://uai.unipus.cn/*
@@ -758,6 +758,7 @@
                         <button class="float-btn solo-btn" id="solo-mode-btn" title="开启后，切换题目将自动获取答案并填充">Solo</button>
                         <button class="float-btn" id="auto-fill-answers" title="一键填充答案">⚡</button>
                         <button class="float-btn" id="export-raw-data" title="导出原始数据(调试用)">📋</button>
+                        <button class="float-btn" id="debug-btn" title="开关调试日志（输出到控制台）">🐞</button>
                         <button class="float-btn" id="refresh-answer" title="刷新答案">🔄</button>
                         <button class="float-btn" id="minimize-answer" title="最小化">−</button>
                         <button class="float-btn" id="close-answer" title="关闭">×</button>
@@ -837,6 +838,21 @@
                         bottom: container.style.bottom
                     }));
                 }
+            });
+
+            // 调试日志开关
+            const debugBtn = container.querySelector('#debug-btn');
+            const applyDebug = (on) => {
+                Logger.enabled = Boolean(on);
+                debugBtn.style.color = on ? '#2196f3' : '';
+                debugBtn.title = on ? '调试日志已开启（输出到控制台）' : '开关调试日志（输出到控制台）';
+            };
+            applyDebug(GM_getValue('debug', false) === true);
+            debugBtn.addEventListener('click', () => {
+                const next = !Logger.enabled;
+                GM_setValue('debug', next);
+                applyDebug(next);
+                if (next) Logger.log('调试日志已开启');
             });
 
             // Solo 模式按钮
@@ -1176,6 +1192,28 @@
                     }
                 }
 
+                // 页面刚加载时回复区可能还没有布局(尺寸 0), 滚动也可能还在进行, 坐标会算错。
+                // 先确保元素在视口内且尺寸稳定, 再让调用方去点击。
+                const settleTarget = async (target) => {
+                    const view = { w: window.innerWidth, h: window.innerHeight };
+                    let last = null;
+                    for (let attempt = 0; attempt < 12; attempt += 1) {
+                        const box = target.getBoundingClientRect();
+                        const sized = box.width > 0 && box.height > 0;
+                        const inside = sized
+                            && box.top >= 40 && box.bottom <= view.h - 20
+                            && box.left >= 0 && box.right <= view.w;
+                        const stable = last && Math.abs(box.top - last.top) < 1 && Math.abs(box.left - last.left) < 1;
+
+                        if (sized && inside && stable) return true;
+                        if (sized && !inside) target.scrollIntoView({ block: 'center', inline: 'nearest' });
+                        last = box;
+                        await new Promise(r => setTimeout(r, 70));
+                    }
+                    const box = target.getBoundingClientRect();
+                    return box.width > 0 && box.height > 0;
+                };
+
                 // ================== 处理判断题与听说单选 ==================
                 // 这类题把选项渲染成 .uls-sc__option, 判断题的角标是 T/F, 但答案仍是 A/B, 按字母顺序取第几个选项即可。
                 if (ulsChoiceQuestions.length > 0) {
@@ -1221,6 +1259,7 @@
                             continue;
                         }
 
+                        await settleTarget(items[0]);
                         items[0].click();
                         await new Promise(r => setTimeout(r, 120));
                         for (const char of target.trim().split('')) {
@@ -1517,9 +1556,6 @@
                             if (!word) return false;
                         }
 
-                        word.scrollIntoView({ block: 'center' });
-                        await new Promise(r => setTimeout(r, 80));
-
                         const actionText = ACTION_TEXT[record.type] || 'mark-correct';
                         const needsForm = actionText === 'change' || actionText === 'add-before';
                         const newWord = record.value && record.value[1];
@@ -1529,6 +1565,10 @@
                             const live = liveMarkerOf(marker);
                             const target = live && wordAt(live, record.index);
                             if (!target) break;
+                            if (!(await settleTarget(target))) {
+                                Logger.warn(`改错题第 ${record.index} 个单词不可见, 跳过本次点击`);
+                                continue;
+                            }
                             syntheticClick(target.querySelector('.mistake-atom-text') || target);
                             action = await waitForNode(
                                 () => Array.from(document.querySelectorAll('.mistake-item-action'))
@@ -1602,10 +1642,27 @@
                         });
 
                         let applied = 0;
-                        for (const task of tasks) {
-                            if (await applyRecord(task.marker, task.record)) {
-                                applied += 1;
+                        const failedTasks = [];
+                        const runPass = async (list) => {
+                            for (const task of list) {
+                                try {
+                                    if (await applyRecord(task.marker, task.record)) {
+                                        applied += 1;
+                                    } else {
+                                        failedTasks.push(task);
+                                    }
+                                } catch (error) {
+                                    Logger.warn('改错题单条处理异常', error);
+                                    failedTasks.push(task);
+                                }
                             }
+                        };
+
+                        await runPass(tasks);
+                        // 首轮有漏掉的, 等页面稳定后再补一轮, 不让一条失败拖掉整段。
+                        if (failedTasks.length > 0) {
+                            await new Promise(r => setTimeout(r, 900));
+                            await runPass(failedTasks.splice(0));
                         }
                         Logger.log(`改错题: 待处理 ${tasks.length} 处, 成功 ${applied} 处`);
                         if (applied > 0) {
